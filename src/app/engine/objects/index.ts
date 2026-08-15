@@ -14,4 +14,10 @@ export * from './expression-object';
 export * from './list-object';
 export * from './intersection-object';
 export * from './transformations';
+export * from './vector-object';
+export * from './parallel-line-object';
+export * from './perp-bisector-object';
+export * from './circle-3pts-object';
+export * from './axis-object';
+
 
