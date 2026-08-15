@@ -1,6 +1,8 @@
 import { Construction } from '../construction/construction';
-import { BaseConstructor } from '../constructors/base-constructor';
+import { BaseConstructor, ConstructorEvent } from '../constructors/base-constructor';
 import { PointConstructor } from '../constructors/point-constructor';
+import { PolygonConstructor } from '../constructors/polygon-constructor';
+import { TwoPointsConstructor, TwoPointsKind } from '../constructors/two-points-constructor';
 import { MathUtils } from '../core/math-utils';
 import { TrackManager } from '../core/track-manager';
 import { GhostRecognizer } from '../ghost/ghost-recognizer';
@@ -54,6 +56,15 @@ export class CanvasManager {
   private lastPointerY = 0;
   private backgroundColor = '#f8f8f8';
 
+  // Event handlers guardados para remoción
+  private onMouseDownBound: (e: MouseEvent) => void;
+  private onMouseMoveBound: (e: MouseEvent) => void;
+  private onMouseUpBound: (e: MouseEvent) => void;
+  private onWheelBound: (e: WheelEvent) => void;
+  private onTouchStartBound: (e: TouchEvent) => void;
+  private onTouchMoveBound: (e: TouchEvent) => void;
+  private onTouchEndBound: (e: TouchEvent) => void;
+
   constructor(canvasElement: HTMLCanvasElement) {
     this.canvasElement = canvasElement;
     const context = canvasElement.getContext('2d');
@@ -70,8 +81,16 @@ export class CanvasManager {
     this.magnifierManager = new MagnifierManager();
     this.macroManager = new MacroManager(this.construction);
 
-    this.defaultPointConstructor = new PointConstructor();
+    this.defaultPointConstructor = new PointConstructor(this.construction);
     this.currentConstructor = this.defaultPointConstructor;
+
+    this.onMouseDownBound = (e: MouseEvent) => this.onMouseDown(e);
+    this.onMouseMoveBound = (e: MouseEvent) => this.onMouseMove(e);
+    this.onMouseUpBound = (e: MouseEvent) => this.onMouseUp(e);
+    this.onWheelBound = (e: WheelEvent) => this.onWheel(e);
+    this.onTouchStartBound = (e: TouchEvent) => this.onTouchStart(e);
+    this.onTouchMoveBound = (e: TouchEvent) => this.onTouchMove(e);
+    this.onTouchEndBound = (e: TouchEvent) => this.onTouchEnd(e);
 
     this.bindEvents();
     this.paint();
@@ -114,6 +133,17 @@ export class CanvasManager {
     this.paint();
   }
 
+  setTool(tool: 'point' | 'segment' | 'line' | 'ray' | 'circle' | 'midpoint' | 'polygon'): void {
+    this.currentMode = CanvasMode.CONSTRUCT;
+    if (tool === 'point') {
+      this.currentConstructor = this.defaultPointConstructor;
+    } else if (tool === 'polygon') {
+      this.currentConstructor = new PolygonConstructor(this.construction);
+    } else {
+      this.currentConstructor = new TwoPointsConstructor(this.construction, tool as TwoPointsKind);
+    }
+  }
+
   setConstructor(constructor: BaseConstructor): void {
     this.currentConstructor = constructor;
   }
@@ -153,32 +183,30 @@ export class CanvasManager {
     }
   }
 
+  destroy(): void {
+    this.unbindEvents();
+  }
+
   private bindEvents(): void {
-    this.canvasElement.addEventListener('mousedown', (e) => this.onMouseDown(e));
-    this.canvasElement.addEventListener('mousemove', (e) => this.onMouseMove(e));
-    this.canvasElement.addEventListener('mouseup', (e) => this.onMouseUp(e));
-    this.canvasElement.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
+    this.canvasElement.addEventListener('mousedown', this.onMouseDownBound);
+    this.canvasElement.addEventListener('mousemove', this.onMouseMoveBound);
+    this.canvasElement.addEventListener('mouseup', this.onMouseUpBound);
+    this.canvasElement.addEventListener('wheel', this.onWheelBound, { passive: false });
 
-    // Eventos táctiles móviles
-    this.canvasElement.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const rect = this.canvasElement.getBoundingClientRect();
-        this.handlePointerDown(touch.clientX - rect.left, touch.clientY - rect.top);
-      }
-    });
+    this.canvasElement.addEventListener('touchstart', this.onTouchStartBound, { passive: false });
+    this.canvasElement.addEventListener('touchmove', this.onTouchMoveBound, { passive: false });
+    this.canvasElement.addEventListener('touchend', this.onTouchEndBound, { passive: false });
+  }
 
-    this.canvasElement.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const rect = this.canvasElement.getBoundingClientRect();
-        this.handlePointerMove(touch.clientX - rect.left, touch.clientY - rect.top);
-      }
-    });
+  private unbindEvents(): void {
+    this.canvasElement.removeEventListener('mousedown', this.onMouseDownBound);
+    this.canvasElement.removeEventListener('mousemove', this.onMouseMoveBound);
+    this.canvasElement.removeEventListener('mouseup', this.onMouseUpBound);
+    this.canvasElement.removeEventListener('wheel', this.onWheelBound);
 
-    this.canvasElement.addEventListener('touchend', () => {
-      this.handlePointerUp(this.lastPointerX, this.lastPointerY);
-    });
+    this.canvasElement.removeEventListener('touchstart', this.onTouchStartBound);
+    this.canvasElement.removeEventListener('touchmove', this.onTouchMoveBound);
+    this.canvasElement.removeEventListener('touchend', this.onTouchEndBound);
   }
 
   private onMouseDown(e: MouseEvent): void {
@@ -215,6 +243,29 @@ export class CanvasManager {
     this.paint();
   }
 
+  private onTouchStart(e: TouchEvent): void {
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = this.canvasElement.getBoundingClientRect();
+      this.handlePointerDown(touch.clientX - rect.left, touch.clientY - rect.top);
+    }
+  }
+
+  private onTouchMove(e: TouchEvent): void {
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = this.canvasElement.getBoundingClientRect();
+      this.handlePointerMove(touch.clientX - rect.left, touch.clientY - rect.top);
+    }
+  }
+
+  private onTouchEnd(e: TouchEvent): void {
+    e.preventDefault();
+    this.handlePointerUp(this.lastPointerX, this.lastPointerY);
+  }
+
   private handlePointerDown(x: number, y: number): void {
     this.isDragging = true;
     this.dragStartX = x;
@@ -228,8 +279,9 @@ export class CanvasManager {
       return;
     }
 
+    const target = this.findObjectUnderPointer(x, y);
+
     if (this.currentMode === CanvasMode.DELETE) {
-      const target = this.findObjectUnderPointer(x, y);
       if (target) {
         this.undoManager.recordRemove(target);
         this.construction.removeObject(target);
@@ -240,7 +292,6 @@ export class CanvasManager {
     }
 
     if (this.currentMode === CanvasMode.HIDE) {
-      const target = this.findObjectUnderPointer(x, y);
       if (target) {
         target.setHidden(!target.isHidden());
       }
@@ -249,7 +300,6 @@ export class CanvasManager {
     }
 
     // Comprobar si se tocó un objeto arrastrable
-    const target = this.findObjectUnderPointer(x, y);
     if (target instanceof MoveableObject && target.isMoveable()) {
       this.draggedObject = target;
       this.draggedObject.startDrag(x, y);
@@ -258,7 +308,8 @@ export class CanvasManager {
     }
 
     if (this.currentMode === CanvasMode.CONSTRUCT) {
-      this.currentConstructor.onMouseDown(x, y, this.construction);
+      const event: ConstructorEvent = { x, y, target: target ?? undefined };
+      this.currentConstructor.onMouseDown(event);
     }
 
     this.paint();
@@ -293,7 +344,9 @@ export class CanvasManager {
       this.construction.getCoordsSystem().translate(dx, dy);
       this.construction.computeAll();
     } else if (this.currentMode === CanvasMode.CONSTRUCT) {
-      this.currentConstructor.onMouseMove(x, y, this.construction);
+      const target = this.findObjectUnderPointer(x, y);
+      const event: ConstructorEvent = { x, y, target: target ?? undefined };
+      this.currentConstructor.onMouseMove(event);
     }
 
     this.paint();
@@ -318,7 +371,9 @@ export class CanvasManager {
     }
 
     if (this.currentMode === CanvasMode.CONSTRUCT) {
-      this.currentConstructor.onMouseUp(x, y, this.construction);
+      const target = this.findObjectUnderPointer(x, y);
+      const event: ConstructorEvent = { x, y, target: target ?? undefined };
+      this.currentConstructor.onMouseUp(event);
     }
 
     this.paint();
