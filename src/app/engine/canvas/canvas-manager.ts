@@ -5,6 +5,7 @@ import { PolygonConstructor } from '../constructors/polygon-constructor';
 import { TwoPointsConstructor, TwoPointsKind } from '../constructors/two-points-constructor';
 import { MathUtils } from '../core/math-utils';
 import { TrackManager } from '../core/track-manager';
+import { EngineExporter } from '../export/exporter';
 import { GhostRecognizer } from '../ghost/ghost-recognizer';
 import { CoincidenceManager } from '../interaction/coincidence-manager';
 import { MagnifierManager } from '../interaction/magnifier-manager';
@@ -28,10 +29,17 @@ export enum CanvasMode {
   DEPENDS = 11,
 }
 
+interface PinchState {
+  x: number;
+  y: number;
+  distance: number;
+}
+
 /**
  * Controlador principal del lienzo HTML5 Canvas.
- * Orquesta eventos del puntero, bucle de renderizado, modos de interacción, arrastre y constructores.
- * Migrado desde Canvas.js
+ * Orquesta eventos del puntero, gestos multi-touch (pinch-to-zoom), bucle de renderizado,
+ * modos de interacción, arrastre, constructores y exportaciones.
+ * Migrado y optimizado desde Canvas.js
  */
 export class CanvasManager {
   private canvasElement: HTMLCanvasElement;
@@ -43,6 +51,7 @@ export class CanvasManager {
   private coincidenceManager: CoincidenceManager;
   private magnifierManager: MagnifierManager;
   private macroManager: MacroManager;
+  private exporter: EngineExporter;
 
   private currentMode: CanvasMode = CanvasMode.CONSTRUCT;
   private currentConstructor: BaseConstructor;
@@ -55,6 +64,7 @@ export class CanvasManager {
   private lastPointerX = 0;
   private lastPointerY = 0;
   private backgroundColor = '#f8f8f8';
+  private pinchState: PinchState | null = null;
 
   // Event handlers guardados para remoción
   private onMouseDownBound: (e: MouseEvent) => void;
@@ -80,6 +90,7 @@ export class CanvasManager {
     this.coincidenceManager = new CoincidenceManager(this.construction);
     this.magnifierManager = new MagnifierManager();
     this.macroManager = new MacroManager(this.construction);
+    this.exporter = new EngineExporter(this.construction);
 
     this.defaultPointConstructor = new PointConstructor(this.construction);
     this.currentConstructor = this.defaultPointConstructor;
@@ -124,6 +135,18 @@ export class CanvasManager {
     return this.macroManager;
   }
 
+  getExporter(): EngineExporter {
+    return this.exporter;
+  }
+
+  getContext(): CanvasRenderingContext2D {
+    return this.ctx;
+  }
+
+  getCanvasElement(): HTMLCanvasElement {
+    return this.canvasElement;
+  }
+
   getMode(): CanvasMode {
     return this.currentMode;
   }
@@ -159,6 +182,15 @@ export class CanvasManager {
     this.paint();
   }
 
+  setBackgroundColor(color: string): void {
+    this.backgroundColor = color;
+    this.paint();
+  }
+
+  getBackgroundColor(): string {
+    return this.backgroundColor;
+  }
+
   clearBackground(): void {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(0, 0, this.canvasElement.width, this.canvasElement.height);
@@ -181,6 +213,34 @@ export class CanvasManager {
         this.lastPointerY,
       );
     }
+  }
+
+  deleteAll(): void {
+    this.construction.clear();
+    this.undoManager.clear();
+    this.trackManager.clear();
+    this.paint();
+  }
+
+  exportSVG(): string {
+    return this.exporter.exportSvg(this.canvasElement.width, this.canvasElement.height);
+  }
+
+  exportPNG(): string {
+    this.paint();
+    return this.canvasElement.toDataURL('image/png');
+  }
+
+  getSource(): string {
+    return this.exporter.exportText();
+  }
+
+  getMouseMathCoords(): { x: number; y: number } {
+    const cs = this.construction.getCoordsSystem();
+    return {
+      x: cs.x(this.lastPointerX),
+      y: cs.y(this.lastPointerY),
+    };
   }
 
   destroy(): void {
@@ -244,25 +304,71 @@ export class CanvasManager {
   }
 
   private onTouchStart(e: TouchEvent): void {
+    e.preventDefault();
+    const rect = this.canvasElement.getBoundingClientRect();
+
     if (e.touches.length === 1) {
-      e.preventDefault();
+      this.pinchState = null;
       const touch = e.touches[0];
-      const rect = this.canvasElement.getBoundingClientRect();
       this.handlePointerDown(touch.clientX - rect.left, touch.clientY - rect.top);
+    } else if (e.touches.length === 2) {
+      // Iniciar gesto de pellizco (Pinch to Zoom)
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const x0 = t0.clientX - rect.left;
+      const y0 = t0.clientY - rect.top;
+      const x1 = t1.clientX - rect.left;
+      const y1 = t1.clientY - rect.top;
+      const dist = Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
+      this.pinchState = {
+        x: (x0 + x1) / 2,
+        y: (y0 + y1) / 2,
+        distance: dist,
+      };
     }
   }
 
   private onTouchMove(e: TouchEvent): void {
+    e.preventDefault();
+    const rect = this.canvasElement.getBoundingClientRect();
+
     if (e.touches.length === 1) {
-      e.preventDefault();
       const touch = e.touches[0];
-      const rect = this.canvasElement.getBoundingClientRect();
       this.handlePointerMove(touch.clientX - rect.left, touch.clientY - rect.top);
+    } else if (e.touches.length === 2 && this.pinchState) {
+      // Continuar pellizco
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const x0 = t0.clientX - rect.left;
+      const y0 = t0.clientY - rect.top;
+      const x1 = t1.clientX - rect.left;
+      const y1 = t1.clientY - rect.top;
+      const currentDist = Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
+      const currentX = (x0 + x1) / 2;
+      const currentY = (y0 + y1) / 2;
+
+      if (this.pinchState.distance > 0 && currentDist > 0) {
+        const scale = currentDist / this.pinchState.distance;
+        const dx = currentX - this.pinchState.x;
+        const dy = currentY - this.pinchState.y;
+
+        this.construction.getCoordsSystem().translate(dx, dy);
+        this.construction.getCoordsSystem().zoom(currentX, currentY, scale);
+        this.construction.computeAll();
+        this.paint();
+      }
+
+      this.pinchState = {
+        x: currentX,
+        y: currentY,
+        distance: currentDist,
+      };
     }
   }
 
   private onTouchEnd(e: TouchEvent): void {
     e.preventDefault();
+    this.pinchState = null;
     this.handlePointerUp(this.lastPointerX, this.lastPointerY);
   }
 
