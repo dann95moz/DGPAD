@@ -124,7 +124,7 @@ if (!$APP_PATH) {
 
 
     var $LOADMAIN = function () {
-        $HEADSCRIPT($APP_PATH + "Main.js");
+        $HEADSCRIPT($APP_PATH + "Main_packed.js");
     }
 
     // Le ou les fichiers de langues doivent être chargées en premier
