@@ -22,6 +22,8 @@ export * from './axis-object';
 export * from './fixed-angle-object';
 export * from './center-object';
 export * from './curvus-object';
+export * from './text-object';
+
 
 
 

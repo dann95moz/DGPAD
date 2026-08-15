@@ -1,13 +1,14 @@
 import { Construction } from '../construction/construction';
 import { BaseConstructor } from '../constructors/base-constructor';
 import { PointConstructor } from '../constructors/point-constructor';
-import { CoordsSystem } from '../core/coords-system';
 import { MathUtils } from '../core/math-utils';
 import { TrackManager } from '../core/track-manager';
 import { GhostRecognizer } from '../ghost/ghost-recognizer';
 import { CoincidenceManager } from '../interaction/coincidence-manager';
 import { MagnifierManager } from '../interaction/magnifier-manager';
 import { MacroManager } from '../macros/macro-manager';
+import { ConstructionObject } from '../objects/base/construction-object';
+import { MoveableObject } from '../objects/base/moveable-object';
 import { UndoManager } from '../undo/undo-manager';
 
 export enum CanvasMode {
@@ -27,7 +28,7 @@ export enum CanvasMode {
 
 /**
  * Controlador principal del lienzo HTML5 Canvas.
- * Orquesta eventos del puntero, bucle de renderizado, modos de interacción y constructores.
+ * Orquesta eventos del puntero, bucle de renderizado, modos de interacción, arrastre y constructores.
  * Migrado desde Canvas.js
  */
 export class CanvasManager {
@@ -46,8 +47,11 @@ export class CanvasManager {
   private defaultPointConstructor: PointConstructor;
 
   private isDragging = false;
+  private draggedObject: MoveableObject | null = null;
   private dragStartX = 0;
   private dragStartY = 0;
+  private lastPointerX = 0;
+  private lastPointerY = 0;
   private backgroundColor = '#f8f8f8';
 
   constructor(canvasElement: HTMLCanvasElement) {
@@ -138,6 +142,15 @@ export class CanvasManager {
     if (this.currentMode === CanvasMode.GHOST) {
       this.ghostRecognizer.paint(this.ctx);
     }
+
+    if (this.magnifierManager.isActive()) {
+      this.magnifierManager.paintMagnifier(
+        this.canvasElement,
+        this.ctx,
+        this.lastPointerX,
+        this.lastPointerY,
+      );
+    }
   }
 
   private bindEvents(): void {
@@ -146,7 +159,7 @@ export class CanvasManager {
     this.canvasElement.addEventListener('mouseup', (e) => this.onMouseUp(e));
     this.canvasElement.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
 
-    // Eventos táctiles
+    // Eventos táctiles móviles
     this.canvasElement.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -164,7 +177,7 @@ export class CanvasManager {
     });
 
     this.canvasElement.addEventListener('touchend', () => {
-      this.handlePointerUp();
+      this.handlePointerUp(this.lastPointerX, this.lastPointerY);
     });
   }
 
@@ -182,8 +195,11 @@ export class CanvasManager {
     this.handlePointerMove(x, y);
   }
 
-  private onMouseUp(_e: MouseEvent): void {
-    this.handlePointerUp();
+  private onMouseUp(e: MouseEvent): void {
+    const rect = this.canvasElement.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    this.handlePointerUp(x, y);
   }
 
   private onWheel(e: WheelEvent): void {
@@ -203,10 +219,45 @@ export class CanvasManager {
     this.isDragging = true;
     this.dragStartX = x;
     this.dragStartY = y;
+    this.lastPointerX = x;
+    this.lastPointerY = y;
 
     if (this.currentMode === CanvasMode.GHOST) {
       this.ghostRecognizer.start(x, y);
-    } else if (this.currentMode === CanvasMode.CONSTRUCT) {
+      this.paint();
+      return;
+    }
+
+    if (this.currentMode === CanvasMode.DELETE) {
+      const target = this.findObjectUnderPointer(x, y);
+      if (target) {
+        this.undoManager.recordRemove(target);
+        this.construction.removeObject(target);
+        this.construction.computeAll();
+      }
+      this.paint();
+      return;
+    }
+
+    if (this.currentMode === CanvasMode.HIDE) {
+      const target = this.findObjectUnderPointer(x, y);
+      if (target) {
+        target.setHidden(!target.isHidden());
+      }
+      this.paint();
+      return;
+    }
+
+    // Comprobar si se tocó un objeto arrastrable
+    const target = this.findObjectUnderPointer(x, y);
+    if (target instanceof MoveableObject && target.isMoveable()) {
+      this.draggedObject = target;
+      this.draggedObject.startDrag(x, y);
+      this.paint();
+      return;
+    }
+
+    if (this.currentMode === CanvasMode.CONSTRUCT) {
       this.currentConstructor.onMouseDown(x, y, this.construction);
     }
 
@@ -214,11 +265,26 @@ export class CanvasManager {
   }
 
   private handlePointerMove(x: number, y: number): void {
+    this.lastPointerX = x;
+    this.lastPointerY = y;
+
     if (!this.isDragging) return;
 
     if (this.currentMode === CanvasMode.GHOST) {
       this.ghostRecognizer.addPoint(x, y);
-    } else if (this.currentMode === CanvasMode.POINTER) {
+      this.paint();
+      return;
+    }
+
+    if (this.draggedObject) {
+      this.draggedObject.dragTo(x, y);
+      this.construction.computeAll();
+      this.trackManager.record(this.draggedObject);
+      this.paint();
+      return;
+    }
+
+    if (this.currentMode === CanvasMode.POINTER) {
       // Pan / Desplazamiento del lienzo
       const dx = x - this.dragStartX;
       const dy = y - this.dragStartY;
@@ -233,16 +299,33 @@ export class CanvasManager {
     this.paint();
   }
 
-  private handlePointerUp(): void {
+  private handlePointerUp(x: number, y: number): void {
     if (!this.isDragging) return;
     this.isDragging = false;
 
     if (this.currentMode === CanvasMode.GHOST) {
       this.ghostRecognizer.finish();
-    } else if (this.currentMode === CanvasMode.CONSTRUCT) {
-      this.currentConstructor.onMouseUp(this.dragStartX, this.dragStartY, this.construction);
+      this.paint();
+      return;
+    }
+
+    if (this.draggedObject) {
+      this.draggedObject.stopDrag();
+      this.draggedObject = null;
+      this.construction.computeAll();
+      this.paint();
+      return;
+    }
+
+    if (this.currentMode === CanvasMode.CONSTRUCT) {
+      this.currentConstructor.onMouseUp(x, y, this.construction);
     }
 
     this.paint();
+  }
+
+  private findObjectUnderPointer(x: number, y: number): ConstructionObject | null {
+    const under = this.construction.getObjectsUnderPoint(x, y);
+    return under.length > 0 ? under[0] : null;
   }
 }
