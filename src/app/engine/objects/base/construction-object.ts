@@ -178,8 +178,16 @@ export abstract class ConstructionObject {
     return this.hidden;
   }
 
-  setHidden(val: number): void {
-    this.hidden = val;
+  setHidden(val: number | boolean): void {
+    if (typeof val === 'boolean') {
+      this.hidden = val ? 1 : 0;
+    } else {
+      this.hidden = val;
+    }
+  }
+
+  isHidden(): boolean {
+    return this.hidden !== 0;
   }
 
   isVisible(): boolean {

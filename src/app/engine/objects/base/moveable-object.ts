@@ -26,4 +26,14 @@ export abstract class MoveableObject extends ConstructionObject {
     this.dragObject(x, y);
     this.computeDrag();
   }
+
+  stopDrag(): void {
+    this.startDragX = 0;
+    this.startDragY = 0;
+  }
+
+  endDrag(): void {
+    this.stopDrag();
+  }
 }
+

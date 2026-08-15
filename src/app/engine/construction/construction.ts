@@ -84,6 +84,14 @@ export class Construction implements IConstruction {
     );
   }
 
+  getObjectsUnderPoint(x: number, y: number, tolerance = 8): ConstructionObject[] {
+    return this.objects.filter((obj) => obj.isVisible() && obj.isNear(x, y, tolerance));
+  }
+
+  findObjectsAt(x: number, y: number, tolerance = 8): ConstructionObject[] {
+    return this.getObjectsUnderPoint(x, y, tolerance);
+  }
+
   getNames(): string[] {
     return this.objects.map((obj) => obj.getName());
   }
