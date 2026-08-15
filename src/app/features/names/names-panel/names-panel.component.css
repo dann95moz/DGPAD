@@ -1,0 +1,155 @@
+:host {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.names-panel-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  pointer-events: none;
+}
+
+.names-panel {
+  position: absolute;
+  right: 8px;
+  bottom: 72px;
+  width: 500px;
+  height: 170px;
+  border: 2px solid red;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  background: rgba(230, 230, 230, 0.98);
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
+}
+
+.names-panel-header {
+  position: relative;
+  height: 30px;
+  background: rgba(210, 210, 210, 1);
+}
+
+.replace-toggle {
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 60px;
+  height: 26px;
+  border: 1px solid #b4b4b4;
+  border-radius: 5px;
+  background: rgba(90, 90, 90, 1);
+  color: rgba(230, 230, 230, 1);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.replace-toggle.active {
+  background: rgba(200, 200, 200, 1);
+  color: rgba(30, 30, 30, 1);
+}
+
+.tabs {
+  position: absolute;
+  left: 70px;
+  top: 5px;
+  display: flex;
+  gap: 5px;
+}
+
+.tab-button {
+  width: 60px;
+  height: 25px;
+  border: 1px solid #b4b4b4;
+  border-top-right-radius: 10px;
+  background: rgba(90, 90, 90, 1);
+  color: rgba(230, 230, 230, 1);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: rgba(230, 230, 230, 1);
+  color: rgba(30, 30, 30, 1);
+}
+
+.close-button {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.names-panel-body {
+  display: flex;
+  height: calc(100% - 30px);
+}
+
+.keyboard {
+  flex: 1;
+  background: rgba(230, 230, 230, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 8px 10px;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.key-button {
+  width: 35px;
+  height: 30px;
+  border: 1px solid #b4b4b4;
+  border-radius: 5px;
+  background: rgba(200, 200, 200, 1);
+  color: rgba(30, 30, 30, 1);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.key-button.selected {
+  background: rgba(50, 50, 50, 1);
+  color: rgba(230, 230, 230, 1);
+}
+
+.key-button.used {
+  color: rgba(150, 150, 150, 1);
+  cursor: not-allowed;
+}
+
+.modifiers {
+  width: 70px;
+  background: rgba(230, 230, 230, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 0 10px;
+}
+
+.modifier-button {
+  width: 50px;
+  height: 25px;
+  border: 1px solid #b4b4b4;
+  border-radius: 5px;
+  background: rgba(90, 90, 90, 1);
+  color: rgba(230, 230, 230, 1);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modifier-button.active {
+  background: rgba(200, 200, 200, 1);
+  color: rgba(30, 30, 30, 1);
+}

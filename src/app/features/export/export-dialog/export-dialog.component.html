@@ -1,0 +1,49 @@
+@if (visible) {
+  <div class="backdrop" (click)="close()"></div>
+
+  <section class="dialog" aria-label="Opciones de exportación">
+    <header class="dialog-header">
+      <h2>Exportar</h2>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      <label class="field">
+        <span>Formato</span>
+        <select [(ngModel)]="format">
+          <option value="text">Texto</option>
+          <option value="html_js">HTML + JS</option>
+          <option value="html">HTML</option>
+          <option value="responsive">Página responsive</option>
+          <option value="svg">SVG</option>
+          <option value="png">PNG</option>
+        </select>
+      </label>
+
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="fixWidgets" />
+        <span>Fijar widgets</span>
+      </label>
+
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="fixDgScripts" />
+        <span>Fijar dgscripts</span>
+      </label>
+
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="hideControlPanel" />
+        <span>Ocultar barra de herramientas</span>
+      </label>
+
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="disableZoom" />
+        <span>Deshabilitar zoom</span>
+      </label>
+    </div>
+
+    <footer class="dialog-footer">
+      <button type="button" (click)="close()">Cancelar</button>
+      <button type="button" (click)="export()">Exportar</button>
+    </footer>
+  </section>
+}

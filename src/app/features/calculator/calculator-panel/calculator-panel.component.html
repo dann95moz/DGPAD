@@ -1,0 +1,35 @@
+<div *ngIf="visible && state as calc" class="calculator-shell">
+  <section class="calculator-top" aria-label="Calculadora">
+    <div class="fields">
+      <label><span>{{ calc.e1Label }}</span><input [value]="calc.e1" (focus)="focus('e1')"
+        (input)="update('e1', $any($event.target).value)" /></label>
+      <label *ngIf="calc.showE2"><span>{{ calc.e2Label }}</span><input [value]="calc.e2" (focus)="focus('e2')"
+        (input)="update('e2', $any($event.target).value)" /></label>
+      <label *ngIf="calc.showMin"><span>min =</span><input [value]="calc.min" (focus)="focus('min')"
+        (input)="update('min', $any($event.target).value)" /></label>
+      <label *ngIf="calc.showMax"><span>max =</span><input [value]="calc.max" (focus)="focus('max')"
+        (input)="update('max', $any($event.target).value)" /></label>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="valid" (click)="validate()" title="Validar">✓</button>
+      <button type="button" class="cancel" (click)="cancel()" title="Cancelar">×</button>
+      <button type="button" class="close" (click)="close()" title="Cerrar">▾</button>
+      <label class="degrees"><span>RAD</span><input type="checkbox" [checked]="calc.degrees"
+        (change)="setDegrees($any($event.target).checked)" /><span>DEG</span></label>
+    </div>
+  </section>
+
+  <section class="calculator-keyboard" aria-label="Teclado matemático">
+    <div class="function-keys">
+      <button *ngFor="let key of functionKeys" type="button" (click)="press(key.value)">{{ key.label }}</button>
+    </div>
+    <div class="command-keys">
+      <button type="button" (click)="deleteLast()">DEL</button>
+      <button type="button" (click)="clearField()">CLR</button>
+    </div>
+    <div class="number-keys">
+      <button *ngFor="let key of numberKeys" type="button" (click)="press(key)">{{ key }}</button>
+    </div>
+  </section>
+</div>

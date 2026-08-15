@@ -1,0 +1,27 @@
+<div *ngIf="visible" class="dialog-shell">
+  <div class="dialog-backdrop" (click)="close()"></div>
+
+  <section class="dialog-panel" aria-label="Construcción textual">
+    <header class="dialog-header">
+      <h3>Construcción textual</h3>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      <p class="help-text">
+        Escribe una instrucción por línea. Luego pulsa <strong>Construir</strong>.
+      </p>
+
+      <textarea
+        [(ngModel)]="text"
+        [placeholder]="placeholder"
+        class="construction-input"
+      ></textarea>
+
+      <div class="dialog-actions">
+        <button type="button" (click)="clear()">Limpiar</button>
+        <button type="button" (click)="build()">Construir</button>
+      </div>
+    </div>
+  </section>
+</div>

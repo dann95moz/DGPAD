@@ -1,0 +1,219 @@
+<aside *ngIf="visible" class="properties-panel" aria-label="Panel de propiedades">
+  <header class="panel-header">
+    <div>
+      <h3>Propiedades</h3>
+      <span *ngIf="state" class="object-type">{{ state.code }}</span>
+    </div>
+    <button type="button" class="close-button" (click)="close()" aria-label="Cerrar">×</button>
+  </header>
+
+  <section *ngIf="!state && globalState as global" class="global-properties">
+    <p class="global-help">Haz clic sobre un objeto o un eje para modificar sus propiedades.</p>
+    <h4>Propiedades globales</h4>
+
+    <label class="global-color-control">
+      <span>Color de fondo</span>
+      <input type="color" [value]="global.backgroundColor"
+        (input)="updateGlobal('backgroundColor', textValue($event))" />
+    </label>
+
+    <div class="color-swatches" aria-label="Colores de fondo predefinidos">
+      <button *ngFor="let color of backgroundColors" type="button"
+        [style.background]="color" [class.active]="global.backgroundColor === color"
+        (click)="updateGlobal('backgroundColor', color)" [attr.aria-label]="color"></button>
+    </div>
+
+    <div class="checkboxes global-checkboxes">
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="global.presentationMode"
+          (change)="updateGlobal('presentationMode', checkedValue($event))" />
+        <span>Modo presentación</span>
+      </label>
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="global.magnifier"
+          (change)="updateGlobal('magnifier', checkedValue($event))" />
+        <span>Mostrar la lupa</span>
+      </label>
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="global.animation"
+          (change)="updateGlobal('animation', checkedValue($event))" />
+        <span>Mostrar la animación</span>
+      </label>
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="global.degrees"
+          (change)="updateGlobal('degrees', checkedValue($event))" />
+        <span>Ángulo en grados</span>
+      </label>
+    </div>
+  </section>
+
+  <p *ngIf="!state && !globalState" class="empty-state">DGPad todavía se está iniciando.</p>
+
+  <section *ngIf="axisSelected && axisState as axis" class="axis-properties">
+    <h4>Propiedades cuadrícula</h4>
+
+    <label class="global-color-control">
+      <span>Color de ejes y cuadrícula</span>
+      <input type="color" [value]="axis.color"
+        (input)="updateAxis('color', textValue($event))" />
+    </label>
+
+    <div class="controls axis-controls">
+      <label class="slider-control">
+        <span>Fuente</span>
+        <input type="range" min="6" max="60" step="1" [value]="axis.fontSize"
+          (input)="updateAxis('fontSize', numberValue($event))" />
+        <output>{{ axis.fontSize }}</output>
+      </label>
+      <label class="slider-control">
+        <span>Tamaño ejes</span>
+        <input type="range" min="0.5" max="10" step="0.5" [value]="axis.axisWidth"
+          (input)="updateAxis('axisWidth', numberValue($event))" />
+        <output>{{ axis.axisWidth }}</output>
+      </label>
+      <label class="slider-control">
+        <span>Tamaño cuadrícula</span>
+        <input type="range" min="0.1" max="2" step="0.1" [value]="axis.gridWidth"
+          (input)="updateAxis('gridWidth', numberValue($event))" />
+        <output>{{ axis.gridWidth }}</output>
+      </label>
+
+      <div class="checkboxes">
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.showGrid"
+          (change)="updateAxis('showGrid', checkedValue($event))" /><span>Mostrar cuadrícula</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.showOx"
+          (change)="updateAxis('showOx', checkedValue($event))" /><span>Mostrar el eje (Ox)</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.showOy"
+          (change)="updateAxis('showOy', checkedValue($event))" /><span>Mostrar el eje (Oy)</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.lockOx"
+          (change)="updateAxis('lockOx', checkedValue($event))" /><span>Bloquear el eje (Ox)</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.lockOy"
+          (change)="updateAxis('lockOy', checkedValue($event))" /><span>Bloquear el eje (Oy)</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.onlyPositive"
+          (change)="updateAxis('onlyPositive', checkedValue($event))" /><span>Sólo los positivos</span></label>
+        <label class="checkbox-control"><input type="checkbox" [checked]="axis.centerZoom"
+          (change)="updateAxis('centerZoom', checkedValue($event))" /><span>Zoom en el origen</span></label>
+      </div>
+    </div>
+  </section>
+
+  <ng-container *ngIf="state as object">
+  <div *ngIf="!axisSelected" class="controls">
+    <div class="name-row">
+      <input
+        type="text"
+        aria-label="Nombre"
+        [value]="object.name"
+        (change)="update('name', textValue($event))"
+      />
+      <label class="checkbox-control compact">
+        <input
+          type="checkbox"
+          [checked]="object.showName"
+          (change)="update('showName', checkedValue($event))"
+        />
+        <span>Mostrar</span>
+      </label>
+    </div>
+
+    <label class="color-control">
+      <span>Color</span>
+      <input
+        type="color"
+        [value]="object.color"
+        (input)="update('color', textValue($event))"
+      />
+    </label>
+
+    <div *ngIf="object.family === 'point'" class="shape-picker" aria-label="Forma del punto">
+      <button type="button" [class.active]="object.shape === 0" (click)="update('shape', 0)" title="Círculo">●</button>
+      <button type="button" [class.active]="object.shape === 1" (click)="update('shape', 1)" title="Cruz">×</button>
+      <button type="button" [class.active]="object.shape === 2" (click)="update('shape', 2)" title="Rombo">◆</button>
+      <button type="button" [class.active]="object.shape === 3" (click)="update('shape', 3)" title="Cuadrado">■</button>
+    </div>
+
+    <label class="slider-control">
+      <span>Tamaño</span>
+      <input type="range" min="0.5" max="25" step="0.5" [value]="object.size"
+        (input)="update('size', numberValue($event))" />
+      <output>{{ object.size }}</output>
+    </label>
+
+    <label class="slider-control">
+      <span>Opacidad</span>
+      <input type="range" min="0" max="1" step="0.01" [value]="object.opacity"
+        (input)="update('opacity', numberValue($event))" />
+      <output>{{ object.opacity }}</output>
+    </label>
+
+    <label class="slider-control">
+      <span>Capa</span>
+      <input type="range" min="-8" max="8" step="1" [value]="object.layer"
+        (input)="update('layer', numberValue($event))" />
+      <output>{{ object.layer }}</output>
+    </label>
+
+    <label class="slider-control">
+      <span>Fuente</span>
+      <input type="range" min="6" max="60" step="1" [value]="object.fontSize"
+        (input)="update('fontSize', numberValue($event))" />
+      <output>{{ object.fontSize }}</output>
+    </label>
+
+    <label class="select-control">
+      <span>Medida</span>
+      <select [value]="object.precision" (change)="update('precision', numberValue($event))">
+        <option *ngFor="let precision of precisionOptions" [value]="precision">
+          {{ precision === -1 ? 'Sin' : precision }}
+        </option>
+      </select>
+    </label>
+
+    <label *ngIf="object.code !== 'angle'" class="select-control">
+      <span>Incremento</span>
+      <select [value]="object.increment" (change)="update('increment', numberValue($event))">
+        <option *ngFor="let increment of incrementOptions" [value]="increment">
+          {{ increment === 0 ? 'Libre' : increment }}
+        </option>
+      </select>
+    </label>
+
+    <div class="checkboxes">
+      <label *ngIf="object.code === 'angle'" class="checkbox-control">
+        <input type="checkbox" [checked]="object.angle360"
+          (change)="update('angle360', checkedValue($event))" />
+        <span>360°</span>
+      </label>
+
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="object.dash"
+          (change)="update('dash', checkedValue($event))" />
+        <span>Punteado</span>
+      </label>
+
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="object.noMouse"
+          (change)="update('noMouse', checkedValue($event))" />
+        <span>Objeto inerte</span>
+      </label>
+
+      <label class="checkbox-control">
+        <input type="checkbox" [checked]="object.track"
+          (change)="update('track', checkedValue($event))" />
+        <span>Activar la traza</span>
+      </label>
+
+      <label *ngIf="object.supportsExclusive" class="checkbox-control">
+        <input type="checkbox" [checked]="object.exclusive"
+          (change)="update('exclusive', checkedValue($event))" />
+        <span>Exclusivo</span>
+      </label>
+
+      <label class="checkbox-control apply-all">
+        <input type="checkbox" [(ngModel)]="applyAll" />
+        <span>Aplicar a todos: {{ familyLabel(object.family) }}</span>
+      </label>
+    </div>
+  </div>
+  </ng-container>
+</aside>

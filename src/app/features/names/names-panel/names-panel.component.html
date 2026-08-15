@@ -1,0 +1,66 @@
+<div *ngIf="visible" class="names-panel-shell">
+  <section class="names-panel" aria-label="Nombres">
+    <header class="names-panel-header">
+      <button
+        type="button"
+        class="replace-toggle"
+        [class.active]="replaceMode"
+        (click)="setReplaceMode(!replaceMode)"
+        title="Renombrar al seleccionar"
+      >
+        ✍
+      </button>
+
+      <div class="tabs">
+        <button
+          type="button"
+          class="tab-button"
+          *ngFor="let tab of tabs; let i = index"
+          [class.active]="currentTabIndex === i"
+          (click)="selectTab(i)"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="close-button"
+        (click)="close()"
+        title="Cerrar"
+      >
+        ✕
+      </button>
+    </header>
+
+    <div class="names-panel-body">
+      <div class="keyboard">
+        <div class="keyboard-row" *ngFor="let row of tabs[currentTabIndex].rows">
+          <button
+            type="button"
+            class="key-button"
+            *ngFor="let key of row; let rowIndex = index"
+            [class.selected]="isSelectedKey(getFlatKeys().indexOf(key))"
+            [class.used]="!isKeyAvailable(getFlatKeys().indexOf(key))"
+            [disabled]="!isKeyAvailable(getFlatKeys().indexOf(key))"
+            (click)="selectKey(getFlatKeys().indexOf(key))"
+          >
+            {{ key }}{{ modifiers[currentModifierIndex] }}
+          </button>
+        </div>
+      </div>
+
+      <div class="modifiers">
+        <button
+          type="button"
+          class="modifier-button"
+          *ngFor="let modifier of modifiers; let i = index"
+          [class.active]="currentModifierIndex === i"
+          (click)="selectModifier(i)"
+        >
+          {{ getDisplayedModifierBase() }}{{ modifier }}
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

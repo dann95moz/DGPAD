@@ -1,0 +1,127 @@
+// UndoManager.js - versión extendida con acciones MODIFY
+
+function UndoManager(_canvas) {
+    const canvas = _canvas;
+    const Cn = canvas.getConstruction();
+    const actions = [];
+    let cursor = 0;
+    const me = this;
+
+    const ADD = 'ADD', REMOVE = 'REMOVE', MODIFY = 'MODIFY';
+
+    let Cmarker = null, Tmarker = null;
+
+    const refreshCanvas = () => {
+        const simulatedEvent = document.createEvent("MouseEvent");
+        simulatedEvent.initMouseEvent("mouseup", true, true, window, 1, -100, -100, -100, -100, false,
+            false, false, false, 0, null);
+        Cn.validate(simulatedEvent);
+        Cn.computeAll();
+        canvas.paint(simulatedEvent);
+        me.setBtns();
+    };
+
+    const add = (_o) => {
+        return (_o instanceof TextObject) ? canvas.textManager.add(_o) : (Cn.add(_o), _o.setParentList(_o.getParent()), _o);
+    };
+
+    const remove = (_o) => {
+        (_o instanceof TextObject) ? canvas.textManager.deleteTeX(_o) : Cn.remove(_o);
+    };
+
+    const applyProperty = (obj, prop, value) => {
+        const fn = obj[`set${prop.charAt(0).toUpperCase() + prop.slice(1)}`];
+        if (typeof fn === 'function') fn.call(obj, value);
+    };
+
+    const undo_redo = (k) => {
+        const t = actions[k];
+
+        switch (t.type) {
+            case ADD:
+                (Array.isArray(t.target) ? t.target : [t.target]).forEach(remove);
+                break;
+            case REMOVE:
+                t.target = (Array.isArray(t.target) ? t.target : [t.target]).map(add);
+                break;
+            case MODIFY:
+                applyProperty(t.target, t.prop, t.oldValue);
+                [t.oldValue, t.newValue] = [t.newValue, t.oldValue];
+                break;
+        }
+    };
+
+    this.recordAdd = (elts) => {
+        actions.splice(cursor);
+        actions.push({ type: ADD, target: elts });
+        cursor++;
+        this.setBtns();
+    };
+
+    this.recordRemove = (elts) => {
+        actions.splice(cursor);
+        actions.push({ type: REMOVE, target: elts });
+        cursor++;
+        this.setBtns();
+    };
+
+    this.recordPropertyChange = (obj, prop, oldValue, newValue) => {
+        actions.splice(cursor);
+        actions.push({
+            type: MODIFY,
+            target: obj,
+            prop,
+            oldValue,
+            newValue
+        });
+        cursor++;
+        this.setBtns();
+    };
+
+    this.undo = function () {
+        if (cursor > 0) {
+            cursor--;
+            undo_redo(cursor);
+            refreshCanvas();
+        }
+    };
+
+    this.redo = function () {
+        if (cursor < actions.length) {
+            undo_redo(cursor);
+            cursor++;
+            refreshCanvas();
+        }
+    };
+
+    this.beginAdd = () => {
+        Cmarker = Cn.elements().length;
+        Tmarker = canvas.textManager.elements().length;
+    };
+
+    this.endAdd = () => {
+        if (Cmarker === null && Tmarker === null) return;
+        const newObjs = Cn.elements().slice(Cmarker).concat(canvas.textManager.elements().slice(Tmarker));
+        if (newObjs.length > 0) this.recordAdd(newObjs);
+        Cmarker = null;
+        Tmarker = null;
+    };
+
+    this.clear = () => {
+        actions.length = 0;
+        cursor = 0;
+        refreshCanvas();
+    };
+
+    this.setBtns = () => {
+        canvas.setUndoBtn(cursor > 0);
+        canvas.setRedoBtn(cursor < actions.length);
+    };
+
+    this.swap = (_o) => {
+        for (const act of actions) {
+            const tab = Array.isArray(act.target) ? act.target : [act.target];
+            if (tab.length === 1 && tab[0] === _o) act.type = act.type === ADD ? REMOVE : ADD;
+        }
+    };
+}

@@ -1,0 +1,207 @@
+<footer class="toolbar">
+  <div class="toolbar-left">
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="constructionEnabled"
+      [class.inactive]="!constructionEnabled"
+      (click)="toggleConstruction()"
+      [attr.aria-pressed]="constructionEnabled"
+      title="Construcción"
+    >
+      <img src="/icons/controls/arrow.png" alt="Construcción" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="hideEnabled"
+      [class.inactive]="!hideEnabled"
+      (click)="toggleHide()"
+      [attr.aria-pressed]="hideEnabled"
+      title="Ocultar / mostrar"
+    >
+      <img src="/icons/controls/hide.png" alt="Ocultar / mostrar" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="deleteEnabled"
+      [class.inactive]="!deleteEnabled"
+      (click)="toggleDelete()"
+      [attr.aria-pressed]="deleteEnabled"
+      title="Borrar"
+    >
+      <img src="/icons/controls/trash.png" alt="Borrar" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="macroEnabled"
+      [class.inactive]="!macroEnabled"
+      (click)="toggleMacro()"
+      [attr.aria-pressed]="macroEnabled"
+      title="Macros"
+    >
+      <img src="/icons/controls/macros.png" alt="Macros" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="calcEnabled"
+      [class.inactive]="!calcEnabled"
+      (click)="toggleCalc()"
+      [attr.aria-pressed]="calcEnabled"
+      title="Calculadora"
+    >
+      <img src="/icons/controls/calc.png" alt="Calculadora" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="texEnabled"
+      [class.inactive]="!texEnabled"
+      (click)="toggleTex()"
+      [attr.aria-pressed]="texEnabled"
+      title="Texto"
+    >
+      <img src="/icons/controls/tex.png" alt="Texto" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="propertiesEnabled"
+      [class.inactive]="!propertiesEnabled"
+      (click)="toggleProperties()"
+      [attr.aria-pressed]="propertiesEnabled"
+      title="Propiedades"
+    >
+      <img src="/icons/controls/properties.png" alt="Propiedades" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="historyEnabled"
+      [class.inactive]="!historyEnabled"
+      (click)="openHistory()"
+      [attr.aria-pressed]="historyEnabled"
+      title="Historial"
+    >
+      <img src="/icons/controls/history.png" alt="Historial" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="exportEnabled"
+      [class.inactive]="!exportEnabled"
+      (click)="openExport()"
+      [attr.aria-pressed]="exportEnabled"
+      title="Exportar"
+    >
+      <img src="/icons/controls/copy.png" alt="Exportar" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="nameEnabled"
+      [class.inactive]="!nameEnabled"
+      (click)="toggleName()"
+      [attr.aria-pressed]="nameEnabled"
+      title="Nombres"
+    >
+      <img src="/icons/controls/name.png" alt="Nombres" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="gridEnabled"
+      [class.inactive]="!gridEnabled"
+      (click)="toggleGrid()"
+      [attr.aria-pressed]="gridEnabled"
+      title="Cuadrícula"
+    >
+      <img src="/icons/controls/grid.png" alt="Cuadrícula" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      (click)="resetZoom()"
+      title="Restablecer zoom"
+    >
+      <img src="/icons/controls/zoom.png" alt="Restablecer zoom" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      [class.active]="otherToolsEnabled"
+      [class.inactive]="!otherToolsEnabled"
+      (click)="toggleOtherTools()"
+      [attr.aria-pressed]="otherToolsEnabled"
+      title="Otras herramientas"
+    >
+      <img src="/icons/controls/OtherTools.png" alt="Otras herramientas" />
+    </button>
+  </div>
+
+  <div class="toolbar-right">
+    <button
+      type="button"
+      class="icon-button"
+      (click)="undo()"
+      title="Deshacer"
+    >
+      <img src="/icons/controls/undo.png" alt="Deshacer" />
+    </button>
+
+    <button
+      type="button"
+      class="icon-button"
+      (click)="redo()"
+      title="Rehacer"
+    >
+      <img src="/icons/controls/redo.png" alt="Rehacer" />
+    </button>
+  </div>
+</footer>
+
+<app-other-tools-menu
+  (closed)="closeOtherToolsState()"
+  (actionSelected)="handleOtherToolSelected($event)"
+></app-other-tools-menu>
+
+<app-textual-construction-dialog
+  (buildRequested)="handleTextualConstructionBuildRequested($event)"
+></app-textual-construction-dialog>
+
+<app-names-panel
+  (closed)="closeNameState()"
+  (replaceModeChanged)="handleNamesReplaceModeChanged($event)"
+  (nameSelected)="handleNameSelected($event)"
+></app-names-panel>
+
+<app-properties-panel
+  (closed)="closePropertiesState()"
+></app-properties-panel>
+
+<app-widget-panel
+  (closed)="closeWidgetState()"
+></app-widget-panel>
+
+<app-macro-panel
+  (closed)="closeMacroState()"
+></app-macro-panel>
+
+<app-calculator-panel
+  (closed)="closeCalculatorState()"
+></app-calculator-panel>

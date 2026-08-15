@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>DGPad Legacy Host</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #eaeaea;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+
+    <script>
+      var $MOBILE_PHONE = false;
+    </script>
+  </head>
+  <body>
+    <script
+      src="/dgpad-legacy/scripts/DGPad.js"
+      data-hidectrlpanel="true"
+    ></script>
+
+    <script>
+      function withCanvas(callback) {
+        if (!window.$CANVAS) {
+          console.error('DGPad todavía no está listo');
+          return;
+        }
+
+        callback(window.$CANVAS);
+      }
+
+      function initLegacyUi() {
+        if (!window.$CANVAS) {
+          setTimeout(initLegacyUi, 200);
+          return;
+        }
+
+        if (typeof window.$CANVAS.ctrl_show === 'function') {
+          window.$CANVAS.ctrl_show(false);
+        }
+
+        if (typeof window.$CANVAS.setMode === 'function') {
+          window.$CANVAS.setMode(1);
+          window.$CANVAS.paint();
+        }
+      }
+
+      window.dgpadBridge = {
+        setMode: function (mode) {
+          withCanvas(function (canvas) {
+            if (
+              canvas.textManager &&
+              typeof canvas.textManager.setExternalPanel === 'function'
+            ) {
+              canvas.textManager.setExternalPanel(mode === 10);
+            }
+            if (
+              canvas.macrosManager &&
+              typeof canvas.macrosManager.setExternalPanel === 'function'
+            ) {
+              canvas.macrosManager.setExternalPanel(mode === 4);
+            }
+            if (
+              canvas.calcManager &&
+              typeof canvas.calcManager.setExternalPanel === 'function'
+            ) {
+              canvas.calcManager.setExternalPanel(mode === 8);
+            }
+            if (typeof canvas.setMode === 'function') {
+              canvas.setMode(mode);
+              canvas.paint();
+            }
+          });
+        },
+
+        openProperties: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.propertiesManager &&
+              typeof canvas.propertiesManager.setExternalPanel === 'function'
+            ) {
+              canvas.propertiesManager.setExternalPanel(true);
+              canvas.setMode(6);
+              canvas.paint();
+            }
+          });
+        },
+
+        closeProperties: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.propertiesManager &&
+              typeof canvas.propertiesManager.setExternalPanel === 'function'
+            ) {
+              canvas.setMode(1);
+              canvas.propertiesManager.setExternalPanel(false);
+              canvas.paint();
+            }
+          });
+        },
+
+        getCalculatorState: function () {
+          if (!window.$CANVAS || !window.$CANVAS.calcManager) return null;
+          return window.$CANVAS.calcManager.getExternalState();
+        },
+
+        beginCalculatorExpression: function () {
+          withCanvas(function (canvas) { canvas.calcManager.ensureExternalObject(); });
+        },
+
+        updateCalculatorField: function (field, value) {
+          withCanvas(function (canvas) { canvas.calcManager.setExternalField(field, value); });
+        },
+
+        setCalculatorDegrees: function (value) {
+          withCanvas(function (canvas) { canvas.calcManager.setExternalDegrees(value); });
+        },
+
+        validateCalculator: function () {
+          withCanvas(function (canvas) { canvas.calcManager.validateExternal(); });
+        },
+
+        cancelCalculator: function () {
+          withCanvas(function (canvas) { canvas.calcManager.cancelExternal(); });
+        },
+
+        getMacroCatalog: function () {
+          if (!window.$CANVAS || !window.$CANVAS.macrosManager) {
+            return { plugins: [], tools: [] };
+          }
+          return window.$CANVAS.macrosManager.getCatalog();
+        },
+
+        startMacro: function (key) {
+          withCanvas(function (canvas) {
+            canvas.macrosManager.startExternal(key);
+          });
+        },
+
+        getActiveMacro: function () {
+          if (!window.$CANVAS || !window.$CANVAS.macrosManager) return null;
+          return window.$CANVAS.macrosManager.getActiveExternal();
+        },
+
+        getMacroDraft: function () {
+          if (!window.$CANVAS || !window.$CANVAS.macrosManager) return null;
+          return window.$CANVAS.macrosManager.getDraft();
+        },
+
+        saveMacroDraft: function (name) {
+          withCanvas(function (canvas) {
+            canvas.macrosManager.saveDraft(name);
+          });
+        },
+
+        getWidgetState: function () {
+          if (!window.$CANVAS || !window.$CANVAS.textManager) return null;
+
+          var manager = window.$CANVAS.textManager;
+          var widget = typeof manager.getCurrentText === 'function'
+            ? manager.getCurrentText()
+            : null;
+
+          if (!widget) return null;
+
+          return {
+            color: widget.getColor(),
+            opacity: Number(widget.getOpacity()),
+            borderSize: Number(widget.getBorderSize()),
+            borderRadius: Number(widget.getBorderRadius()),
+            precision: Number(widget.getNumPrec()),
+            fontSize: Number(widget.getWidgetFont()),
+            fixPosition: !!widget.getFixPosition(),
+            fixSize: !!widget.getFixSize()
+          };
+        },
+
+        updateWidgetProperty: function (property, value) {
+          withCanvas(function (canvas) {
+            var manager = canvas.textManager;
+            var widget = manager && typeof manager.getCurrentText === 'function'
+              ? manager.getCurrentText()
+              : null;
+
+            if (!widget) return;
+
+            var setters = {
+              color: 'setColor',
+              opacity: 'setOpacity',
+              borderSize: 'setBorderSize',
+              borderRadius: 'setBorderRadius',
+              precision: 'setNumPrec',
+              fontSize: 'setWidgetFont',
+              fixPosition: 'setFixPosition',
+              fixSize: 'setFixSize'
+            };
+            var method = setters[property];
+
+            if (method && typeof widget[method] === 'function') {
+              widget[method](value);
+              canvas.paint();
+            }
+          });
+        },
+
+        createWidget: function (options) {
+          withCanvas(function (canvas) {
+            var color = new Color();
+            color.set(options.color);
+            color.setOpacity(options.opacity);
+
+            var style = 'c:' + color.getRGBA();
+            style += ';s:' + options.borderSize;
+            style += ';r:' + options.borderRadius;
+            style += ';p:' + options.precision;
+            style += ';t:' + options.fontSize;
+            style += ';fp:' + options.fixPosition;
+            style += ';ft:' + options.fixSize;
+
+            canvas.textManager.addText('', 70, 10, 500, 65, style);
+          });
+        },
+
+        getPropertyState: function () {
+          if (!window.$CANVAS || !window.$CANVAS.propertiesManager) {
+            return null;
+          }
+
+          var manager = window.$CANVAS.propertiesManager;
+          var obj = typeof manager.getCurrentObject === 'function'
+            ? manager.getCurrentObject()
+            : null;
+
+          if (!obj) {
+            return null;
+          }
+
+          var read = function (method, fallback) {
+            return typeof obj[method] === 'function' ? obj[method]() : fallback;
+          };
+          var color = read('getColor', null);
+
+          return {
+            name: read('getName', ''),
+            code: read('getCode', ''),
+            family: read('getFamilyCode', ''),
+            showName: !!read('getShowName', false),
+            color: color && typeof color.getHEX === 'function' ? color.getHEX() : '#000000',
+            opacity: Number(read('getOpacity', 1)),
+            size: Number(read('getSize', 1)),
+            layer: Number(read('getLayer', 0)),
+            fontSize: Number(read('getFontSize', 12)),
+            precision: read('getPrecision', -1) === -1
+              ? -1
+              : Math.round(Math.log(read('getPrecision', 1)) / Math.LN10),
+            increment: Number(read('getIncrement', 0)),
+            shape: Number(read('getShape', -1)),
+            dash: !!read('isDash', false),
+            noMouse: !!read('isNoMouseInside', false),
+            track: !!read('isTrack', false),
+            angle360: typeof obj.is360 === 'function' ? !!obj.is360() : false,
+            supportsExclusive: typeof obj.isExclusiveMagnetTarget === 'function',
+            exclusive: typeof obj.isExclusiveMagnetTarget === 'function'
+              ? !!obj.isExclusiveMagnetTarget()
+              : false
+          };
+        },
+
+        getGlobalPropertyState: function () {
+          if (!window.$CANVAS) return null;
+
+          var canvas = window.$CANVAS;
+          var construction = canvas.getConstruction();
+          var magnifier = canvas.magnifyManager;
+          var presentation = canvas.demoModeManager;
+
+          return {
+            backgroundColor: typeof canvas.getBackground === 'function'
+              ? canvas.getBackground()
+              : '#ffffff',
+            presentationMode: !!(
+              presentation &&
+              typeof presentation.getDemoMode === 'function' &&
+              presentation.getDemoMode()
+            ),
+            magnifier: !!(
+              magnifier &&
+              typeof magnifier.getMagnifierMode === 'function' &&
+              magnifier.getMagnifierMode()
+            ),
+            animation: !!(
+              magnifier &&
+              typeof magnifier.getMonkeyMode === 'function' &&
+              magnifier.getMonkeyMode()
+            ),
+            degrees: !!(
+              construction &&
+              typeof construction.isDEG === 'function' &&
+              construction.isDEG()
+            )
+          };
+        },
+
+        updateGlobalProperty: function (property, value) {
+          withCanvas(function (canvas) {
+            var construction = canvas.getConstruction();
+
+            if (property === 'backgroundColor' && typeof canvas.setBackground === 'function') {
+              canvas.setBackground(value);
+            }
+
+            if (
+              property === 'presentationMode' &&
+              canvas.demoModeManager &&
+              typeof canvas.demoModeManager.setDemoMode === 'function'
+            ) {
+              canvas.demoModeManager.setDemoMode(!!value);
+            }
+
+            if (
+              property === 'magnifier' &&
+              canvas.magnifyManager &&
+              typeof canvas.magnifyManager.setMagnifierMode === 'function'
+            ) {
+              canvas.magnifyManager.setMagnifierMode(!!value);
+            }
+
+            if (
+              property === 'animation' &&
+              canvas.magnifyManager &&
+              typeof canvas.magnifyManager.setMonkeyMode === 'function'
+            ) {
+              canvas.magnifyManager.setMonkeyMode(!!value);
+            }
+
+            if (property === 'degrees' && construction && typeof construction.setDEG === 'function') {
+              construction.setDEG(!!value);
+              construction.computeAll();
+            }
+
+            canvas.paint();
+          });
+        },
+
+        getAxisPropertyState: function () {
+          if (!window.$CANVAS) return null;
+
+          var coordinates = window.$CANVAS.getConstruction().coordsSystem;
+
+          return {
+            color: coordinates.getColor(),
+            fontSize: Number(coordinates.getFontSize()),
+            axisWidth: Number(coordinates.getAxisWidth()),
+            gridWidth: Number(coordinates.getGridWidth()),
+            showGrid: !!coordinates.isGrid(),
+            showOx: !!coordinates.isOx(),
+            showOy: !!coordinates.isOy(),
+            lockOx: !!coordinates.isLockOx(),
+            lockOy: !!coordinates.isLockOy(),
+            onlyPositive: !!coordinates.isOnlyPos(),
+            centerZoom: !!coordinates.isCenterZoom()
+          };
+        },
+
+        updateAxisProperty: function (property, value) {
+          withCanvas(function (canvas) {
+            var coordinates = canvas.getConstruction().coordsSystem;
+            var setters = {
+              color: 'setColor',
+              fontSize: 'setFontSize',
+              axisWidth: 'setAxisWidth',
+              gridWidth: 'setGridWidth',
+              showGrid: 'showGrid',
+              showOx: 'showOx',
+              showOy: 'showOy',
+              lockOx: 'setLockOx',
+              lockOy: 'setLockOy',
+              onlyPositive: 'setOnlyPos',
+              centerZoom: 'setCenterZoom'
+            };
+            var method = setters[property];
+
+            if (method && typeof coordinates[method] === 'function') {
+              coordinates[method](value);
+              canvas.paint();
+            }
+          });
+        },
+
+        updateProperty: function (property, value, applyAll) {
+          withCanvas(function (canvas) {
+            var manager = canvas.propertiesManager;
+            var obj = manager && typeof manager.getCurrentObject === 'function'
+              ? manager.getCurrentObject()
+              : null;
+
+            if (!obj) return;
+
+            var setters = {
+              name: 'setName',
+              showName: 'setShowName',
+              color: 'setColor',
+              opacity: 'setOpacity',
+              size: 'setSize',
+              layer: 'setLayer',
+              fontSize: 'setFontSize',
+              precision: 'setPrecision',
+              increment: 'setIncrement',
+              shape: 'setShape',
+              dash: 'setDash',
+              noMouse: 'setNoMouseInside',
+              angle360: 'set360',
+              exclusive: 'setExclusiveMagnetTarget'
+            };
+            var method = setters[property];
+            var construction = canvas.getConstruction();
+
+            if (property === 'track') {
+              if (applyAll && canvas.trackManager && typeof canvas.trackManager.setAllTrack === 'function') {
+                canvas.trackManager.setAllTrack(obj.getFamilyCode(), !!value);
+              } else if (canvas.trackManager) {
+                if (value && typeof canvas.trackManager.add === 'function') canvas.trackManager.add(obj);
+                if (!value && typeof canvas.trackManager.remove === 'function') canvas.trackManager.remove(obj);
+              }
+            } else if (applyAll) {
+              var allSetters = {
+                color: 'setAllColor',
+                opacity: 'setAllOpacity',
+                size: 'setAllSize',
+                layer: 'setAllLayer',
+                fontSize: 'setAllFontSize',
+                precision: 'setAllPrecision',
+                increment: 'setAllIncrement',
+                dash: 'setAllDash',
+                noMouse: 'setAllNoMouse',
+                angle360: 'setAll360'
+              };
+              var allMethod = allSetters[property];
+
+              if (property === 'shape' && typeof construction.setAllPtShape === 'function') {
+                construction.setAllPtShape(value);
+              } else if (allMethod && typeof construction[allMethod] === 'function') {
+                construction[allMethod](obj.getFamilyCode(), value);
+              } else if (method && typeof obj[method] === 'function') {
+                obj[method](value);
+              }
+            } else if (method && typeof obj[method] === 'function') {
+              obj[method](value);
+            }
+
+            construction.computeAll();
+            canvas.paint();
+          });
+        },
+
+        openNames: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.namesManager &&
+              typeof canvas.namesManager.show === 'function'
+            ) {
+              canvas.namesManager.show();
+              canvas.paint();
+            }
+          });
+        },
+
+        closeNames: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.namesManager &&
+              typeof canvas.namesManager.hide === 'function'
+            ) {
+              canvas.namesManager.hide();
+              canvas.paint();
+            }
+          });
+        },
+
+        isNamesVisible: function () {
+          if (
+            !window.$CANVAS ||
+            !window.$CANVAS.namesManager ||
+            typeof window.$CANVAS.namesManager.isVisible !== 'function'
+          ) {
+            return false;
+          }
+
+          return !!window.$CANVAS.namesManager.isVisible();
+        },
+
+        exportText: function (options) {
+          if (!window.$CANVAS || typeof window.$CANVAS.getSource !== 'function') {
+            return '';
+          }
+
+          return window.$CANVAS.getSource(
+            !!options?.hideControlPanel,
+            !!options?.fixWidgets,
+            !!options?.fixDgScripts,
+            !!options?.disableZoom,
+            false,
+            false
+          );
+        },
+
+        exportHtmlJs: function (options) {
+          if (!window.$CANVAS || typeof window.$CANVAS.getHTMLJS !== 'function') {
+            return '';
+          }
+
+          return window.$CANVAS.getHTMLJS(
+            !!options?.hideControlPanel,
+            !!options?.fixWidgets,
+            !!options?.fixDgScripts,
+            !!options?.disableZoom,
+            false,
+            false
+          );
+        },
+
+        exportHtml: function (options) {
+          if (!window.$CANVAS || typeof window.$CANVAS.getHTML !== 'function') {
+            return '';
+          }
+
+          return window.$CANVAS.getHTML(
+            !!options?.hideControlPanel,
+            !!options?.fixWidgets,
+            !!options?.fixDgScripts,
+            !!options?.disableZoom,
+            false,
+            false
+          );
+        },
+
+        exportResponsive: function (options) {
+          if (!window.$CANVAS || typeof window.$CANVAS.getHTMLJS1 !== 'function') {
+            return '';
+          }
+
+          var hidectrlpanel = !!options?.hideControlPanel;
+          var fixwidgets = !!options?.fixWidgets;
+          var fixdgscripts = !!options?.fixDgScripts;
+          var disablezoom = !!options?.disableZoom;
+          var local = false;
+          var version = false;
+
+          var s = '<!DOCTYPE html>\n';
+          s += '<head>\n';
+          s += '<title></title>\n';
+          s += '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n';
+          s += '<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=no" />';
+          s += '</head>\n';
+          s += '<body onload="init()">\n';
+          s += '<form id="geomForm" action="https://dgpad-colombia.udistrital.edu.co/estudiantes.html" target="frame" method="post">\n';
+          s += '<input type="hidden" name="file_content" value="';
+          s += window.$CANVAS.getHTMLJS1(
+            hidectrlpanel,
+            fixwidgets,
+            fixdgscripts,
+            disablezoom,
+            local,
+            version
+          );
+          s += '">\n';
+          s += '</form>';
+          s += '<iframe id="frame" name="frame" style="display: block; position: relative; left: 0px; top: 0px; z-index:1; overflow:hidden; margin:0; padding:0; border:none"></iframe>\n';
+          s += '<script>';
+          s += 'var $WIDTH = ' + window.innerWidth + ', $HEIGHT = ' + window.innerHeight + ';';
+          s += 'var resize = function() {';
+          s += 'var frame = document.getElementById("frame");';
+          s += 'frame.width = 0;';
+          s += 'frame.height = 0;';
+          s += 'var ww = window.innerWidth;';
+          s += 'var wh = window.innerHeight;';
+          s += 'var scale = Math.min(ww / $WIDTH, wh / $HEIGHT);';
+          s += 'frame.style.left = (ww - $WIDTH * scale) / 2 + "px";';
+          s += 'frame.width = $WIDTH;';
+          s += 'frame.height = $HEIGHT;';
+          s += 'frame.style.transformOrigin = "0 0";';
+          s += 'frame.style.transform = "scale(" + scale + ")";';
+          s += '};';
+          s += 'window.onresize = resize;';
+          s += 'window.addEventListener("orientationchange", resize);';
+          s += 'var init = function() {';
+          s += 'resize();';
+          s += 'document.getElementById("geomForm").submit();';
+          s += '};';
+          s += 'document.addEventListener("DOMContentLoaded", init);';
+          s += '<\/script>';
+          s += '</body>\n';
+          s += '</html>\n';
+
+          return s;
+        },
+
+        saveHistorySnapshot: function () {
+          if (!window.$CANVAS || typeof window.$CANVAS.saveToLocalStorage !== 'function') {
+            return;
+          }
+
+          window.$CANVAS.saveToLocalStorage();
+          window.$CANVAS.paint();
+        },
+
+        getHistoryEntries: function () {
+          if (!window.$P || !window.$P.localstorage) {
+            return [];
+          }
+
+          var entries = [];
+          for (var i = 1; i <= window.$P.localstorage.max; i++) {
+            var key = window.$P.localstorage.base + i;
+            var raw = localStorage.getItem(key);
+
+            if (!raw) {
+              continue;
+            }
+
+            try {
+              var item = JSON.parse(raw);
+              entries.push({
+                index: i,
+                date: item.date || '',
+                img: item.img || '',
+                lock: !!item.lock
+              });
+            } catch (e) {
+              console.warn('Entrada de historial inválida:', key, e);
+            }
+          }
+
+          return entries;
+        },
+
+        openHistoryEntry: function (index) {
+          if (!window.$CANVAS || typeof window.$CANVAS.load64 !== 'function') {
+            return;
+          }
+
+          if (!window.$P || !window.$P.localstorage) {
+            return;
+          }
+
+          var key = window.$P.localstorage.base + index;
+          var raw = localStorage.getItem(key);
+
+          if (!raw) {
+            return;
+          }
+
+          try {
+            var item = JSON.parse(raw);
+            if (item.src) {
+              window.$CANVAS.load64(item.src);
+            }
+          } catch (e) {
+            console.warn('No se pudo abrir el historial:', index, e);
+          }
+        },
+
+        clearUnlockedHistory: function () {
+          if (!window.$P || !window.$P.localstorage) {
+            return;
+          }
+
+          for (var i = 1; i <= window.$P.localstorage.max; i++) {
+            var key = window.$P.localstorage.base + i;
+            var raw = localStorage.getItem(key);
+
+            if (!raw) {
+              continue;
+            }
+
+            try {
+              var item = JSON.parse(raw);
+              if (!item.lock) {
+                localStorage.removeItem(key);
+              }
+            } catch (e) {
+              localStorage.removeItem(key);
+            }
+          }
+        },
+
+        toggleGrid: function () {
+          if (!window.$CANVAS) {
+            return false;
+          }
+
+          if (typeof window.$CANVAS.isCS === 'function' && window.$CANVAS.isCS()) {
+            if (typeof window.$CANVAS.showCS === 'function') {
+              window.$CANVAS.showCS(false);
+              window.$CANVAS.paint();
+            }
+            return false;
+          }
+
+          if (typeof window.$CANVAS.showCS === 'function') {
+            window.$CANVAS.showCS(true);
+            window.$CANVAS.paint();
+          }
+
+          return true;
+        },
+
+        isGridVisible: function () {
+          if (!window.$CANVAS || typeof window.$CANVAS.isCS !== 'function') {
+            return false;
+          }
+
+          return !!window.$CANVAS.isCS();
+        },
+
+        resetZoom: function () {
+          withCanvas(function (canvas) {
+            var Cn = canvas.getCn();
+            var width = canvas.getWidth();
+            var height = canvas.getHeight();
+
+            if (!Cn || !Cn.coordsSystem) {
+              return;
+            }
+
+            var previousCenterZoom =
+              typeof Cn.coordsSystem.isCenterZoom === 'function'
+                ? Cn.coordsSystem.isCenterZoom()
+                : false;
+
+            if (typeof Cn.coordsSystem.setCenterZoom === 'function') {
+              Cn.coordsSystem.setCenterZoom(true);
+            }
+
+            if (
+              typeof Cn.zoom === 'function' &&
+              typeof Cn.coordsSystem.getUnit === 'function'
+            ) {
+              Cn.zoom(width / 2, height / 2, 40 / Cn.coordsSystem.getUnit());
+            }
+
+            if (typeof Cn.computeAll === 'function') {
+              Cn.computeAll();
+            }
+
+            canvas.paint();
+
+            if (typeof Cn.coordsSystem.setCenterZoom === 'function') {
+              Cn.coordsSystem.setCenterZoom(previousCenterZoom);
+            }
+          });
+        },
+
+        openOtherTools: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.longpressManager &&
+              typeof canvas.longpressManager.show === 'function'
+            ) {
+              var bounds = canvas.getDocObject().getBoundingClientRect();
+              var eventReplica = {
+                pageX: bounds.left + bounds.width / 2,
+                pageY: bounds.top + bounds.height / 2
+              };
+
+              canvas.longpressManager.show(eventReplica);
+            }
+          });
+        },
+
+        openConstructionProtocol: function () {
+          withCanvas(function (canvas) {
+            var frame = canvas.getConstruction().getFrame();
+            if (frame && typeof frame.drawFrame === 'function') {
+              frame.drawFrame(canvas, 20, 20);
+              if (typeof frame.draw === 'function') {
+                frame.draw();
+              }
+            }
+          });
+        },
+
+        openTextualConstruction: function () {
+          withCanvas(function (canvas) {
+            if (canvas.longpressManager && typeof canvas.longpressManager.show === 'function') {
+              var bounds = canvas.getDocObject().getBoundingClientRect();
+              var eventReplica = {
+                pageX: bounds.left + bounds.width / 2,
+                pageY: bounds.top + bounds.height / 2
+              };
+              canvas.longpressManager.show(eventReplica);
+            }
+          });
+        },
+
+        duplicateFigure: function () {
+          withCanvas(function (canvas) {
+            var source = canvas.getSource();
+            source = btoa(unescape(encodeURIComponent(source)));
+            var target = 'popupform' + Math.random() * 100000000;
+            var form = document.createElement('form');
+            form.target = target;
+            form.method = 'post';
+
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'file_content';
+            input.value = source;
+
+            form.appendChild(input);
+            canvas.getDocObject().parentNode.appendChild(form);
+            window.open('', target);
+            form.submit();
+          });
+        },
+
+        openFile: function () {
+          withCanvas(function (canvas) {
+            var readFile = function (ev) {
+              canvas.load64($U.base64_encode(ev.target.result));
+            };
+
+            var select = document.createElement('input');
+            select.type = 'file';
+            select.onchange = function (ev) {
+              var reader = new FileReader();
+              reader.readAsText(ev.target.files[0]);
+              reader.addEventListener('load', readFile, false);
+            };
+
+            document.body.appendChild(select);
+            select.click();
+          });
+        },
+
+        saveFile: function () {
+          withCanvas(async function (canvas) {
+            var fileContent = canvas.getSource();
+
+            if (window.showSaveFilePicker) {
+              var options = {
+                suggestedName: 'archivo-dgpad.txt',
+                types: [
+                  {
+                    description: 'archivos dgpad-colombia',
+                    accept: { 'text/plain': ['.txt'] }
+                  }
+                ]
+              };
+
+              var handle = await window.showSaveFilePicker(options);
+              var writable = await handle.createWritable();
+              await writable.write(fileContent);
+              await writable.close();
+              return;
+            }
+
+            var fileName = prompt('Nombre del archivo:', 'archivo-dgpad.txt');
+            if (!fileName) {
+              return;
+            }
+
+            if (!fileName.endsWith('.txt')) {
+              fileName += '.txt';
+            }
+
+            var blob = new Blob([fileContent], { type: 'text/plain' });
+            var url = URL.createObjectURL(blob);
+            var anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = fileName;
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(url);
+          });
+        },
+
+        createBlocklyButton: function () {
+          withCanvas(function (canvas) {
+            if (canvas.longpressManager && typeof canvas.longpressManager.show === 'function') {
+              var bounds = canvas.getDocObject().getBoundingClientRect();
+              var eventReplica = {
+                pageX: bounds.left + bounds.width / 2,
+                pageY: bounds.top + bounds.height / 2
+              };
+              canvas.longpressManager.show(eventReplica);
+            }
+          });
+        },
+
+        createExpression: function () {
+          this.createBlocklyButton();
+        },
+
+        createExpressionPoints: function () {
+          this.createBlocklyButton();
+        },
+
+        createExpressionSegments: function () {
+          this.createBlocklyButton();
+        },
+
+        createBoardPoints: function () {
+          withCanvas(function (canvas) {
+            if (
+              canvas.longpressManager &&
+              typeof canvas.longpressManager.createTableroPuntos === 'function'
+            ) {
+              canvas.longpressManager.createTableroPuntos();
+            }
+          });
+        },
+
+        createIntegerCursor: function () {
+          this.createBlocklyButton();
+        },
+
+        createContinuousCursor: function () {
+          this.createBlocklyButton();
+        },
+
+        createEditWidget: function () {
+          this.createBlocklyButton();
+        },
+
+        getAutosaveMinutes: function () {
+          var value = localStorage.getItem('dgpad_autosave_interval');
+          return value ? parseInt(value, 10) || 0 : 0;
+        },
+
+        setAutosaveMinutes: function (minutes) {
+          localStorage.setItem('dgpad_autosave_interval', String(minutes));
+        }
+      };
+
+      initLegacyUi();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  background: #efefef;
+  border-top: 1px solid #d6d6d6;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-left {
+  justify-content: flex-start;
+}
+
+.toolbar-right {
+  justify-content: flex-end;
+}
+
+.icon-button {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-button img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: grayscale(1) brightness(0);
+  opacity: 1;
+}
+
+.icon-button.active {
+  background: #cfcfcf;
+  border-color: #a8a8a8;
+}
+
+.icon-button.inactive {
+  background: transparent;
+  border-color: transparent;
+}
+
+.icon-button img[src*="OtherTools.png"] {
+  width: 24px;
+  height: 24px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}

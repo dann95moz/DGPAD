@@ -1,0 +1,26 @@
+<div class="editor-page">
+  <main class="editor-canvas-area">
+    <section class="dgpad-host" aria-label="Área del editor DGPad">
+      <div class="dgpad-stage" id="dgpad-stage"></div>
+    </section>
+  </main>
+
+  <app-toolbar
+    (historyRequested)="openHistoryDialog()"
+    (exportRequested)="openExportDialog()"
+  ></app-toolbar>
+
+  <app-history-dialog
+    (closed)="handleHistoryDialogClosed()"
+    (refreshRequested)="handleHistoryRefreshRequested()"
+    (saveRequested)="handleHistorySaveRequested()"
+    (clearRequested)="handleHistoryClearRequested()"
+    (openEntryRequested)="handleHistoryOpenEntryRequested($event)"
+    (autosaveChanged)="handleAutosaveChanged($event)"
+  ></app-history-dialog>
+
+  <app-export-dialog
+    (exportConfirmed)="handleExport($event)"
+    (closed)="handleExportDialogClosed()"
+  ></app-export-dialog>
+</div>

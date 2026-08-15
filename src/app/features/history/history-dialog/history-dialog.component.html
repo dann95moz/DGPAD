@@ -1,0 +1,44 @@
+<div *ngIf="visible">
+  <div class="backdrop" (click)="close()"></div>
+
+  <section class="dialog" aria-label="Historial">
+    <header class="dialog-header">
+      <h2>Historial</h2>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      <div class="history-toolbar">
+        <button type="button" (click)="saveSnapshot()">Guardar actual</button>
+        <button type="button" (click)="clearHistory()">Borrar histórico</button>
+        <button type="button" (click)="refresh()">Actualizar</button>
+      </div>
+
+      <label class="autosave-field">
+        <span>Guardar automáticamente cada</span>
+        <input
+          type="number"
+          min="0"
+          [value]="autosaveMinutes"
+          (change)="updateAutosave($any($event.target).value)"
+        />
+        <span>minutos</span>
+      </label>
+
+      <div class="history-list">
+        <div *ngIf="entries.length === 0" class="empty-state">
+          No hay elementos guardados.
+        </div>
+
+        <article class="history-card" *ngFor="let entry of entries">
+          <img [src]="entry.img" [alt]="'Miniatura ' + entry.date" />
+          <div class="history-meta">
+            <div>{{ entry.date }}</div>
+            <div>{{ entry.lock ? 'Bloqueado' : 'Desbloqueado' }}</div>
+          </div>
+          <button type="button" (click)="openEntry(entry.index)">Abrir</button>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>

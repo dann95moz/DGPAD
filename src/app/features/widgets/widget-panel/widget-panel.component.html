@@ -1,0 +1,48 @@
+<aside *ngIf="visible" class="widget-panel" aria-label="Panel de widgets">
+  <header>
+    <h3>Widgets</h3>
+    <button type="button" (click)="close()" aria-label="Cerrar">×</button>
+  </header>
+
+  <p class="help-text">
+    {{ hasSelection ? 'Modifica las propiedades del widget seleccionado.' : 'Haz clic sobre un widget para modificar sus propiedades.' }}
+  </p>
+
+  <label class="color-control">
+    <span>Color</span>
+    <input type="color" [value]="state.color" (input)="update('color', textValue($event))" />
+  </label>
+
+  <div class="color-swatches">
+    <button *ngFor="let color of colors" type="button" [style.background]="color"
+      [class.active]="state.color === color" (click)="update('color', color)"
+      [attr.aria-label]="color"></button>
+  </div>
+
+  <div class="controls">
+    <label><span>Opacidad</span><input type="range" min="0" max="1" step="0.01"
+      [value]="state.opacity" (input)="update('opacity', numberValue($event))" />
+      <output>{{ state.opacity }}</output></label>
+    <label><span>Tamaño</span><input type="range" min="0" max="30" step="0.5"
+      [value]="state.borderSize" (input)="update('borderSize', numberValue($event))" />
+      <output>{{ state.borderSize }}</output></label>
+    <label><span>Radio</span><input type="range" min="0" max="200" step="0.5"
+      [value]="state.borderRadius" (input)="update('borderRadius', numberValue($event))" />
+      <output>{{ state.borderRadius }}</output></label>
+    <label><span>Precisión</span><input type="range" min="0" max="13" step="1"
+      [value]="state.precision" (input)="update('precision', numberValue($event))" />
+      <output>{{ state.precision }}</output></label>
+    <label><span>Fuente</span><input type="range" min="5" max="40" step="1"
+      [value]="state.fontSize" (input)="update('fontSize', numberValue($event))" />
+      <output>{{ state.fontSize }}</output></label>
+  </div>
+
+  <div class="checkboxes">
+    <label><input type="checkbox" [checked]="state.fixPosition"
+      (change)="update('fixPosition', checkedValue($event))" />Fijar posición</label>
+    <label><input type="checkbox" [checked]="state.fixSize"
+      (change)="update('fixSize', checkedValue($event))" />Fijar tamaño</label>
+  </div>
+
+  <button type="button" class="new-widget" (click)="createWidget()">Nuevo widget</button>
+</aside>

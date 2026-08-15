@@ -1,0 +1,21 @@
+<div *ngIf="visible" class="menu-shell">
+  <div class="menu-backdrop" (click)="close()"></div>
+
+  <section class="menu-panel" aria-label="Otras herramientas">
+    <header class="menu-header">
+      <h3>Otras herramientas</h3>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="menu-body">
+      <button
+        type="button"
+        class="menu-item"
+        *ngFor="let item of items"
+        (click)="select(item.id)"
+      >
+        {{ item.label }}
+      </button>
+    </div>
+  </section>
+</div>
