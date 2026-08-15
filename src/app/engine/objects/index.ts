@@ -19,5 +19,9 @@ export * from './parallel-line-object';
 export * from './perp-bisector-object';
 export * from './circle-3pts-object';
 export * from './axis-object';
+export * from './fixed-angle-object';
+export * from './center-object';
+export * from './curvus-object';
+
 
 
