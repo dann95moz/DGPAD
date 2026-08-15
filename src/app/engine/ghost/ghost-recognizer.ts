@@ -1,13 +1,11 @@
 import { Construction } from '../construction/construction';
+import { Point2D } from '../core/math-utils';
 import { AreaObject } from '../objects/area-object';
 import { CircleObject } from '../objects/circle-object';
 import { PointObject } from '../objects/point-object';
 import { SegmentObject } from '../objects/segment-object';
 
-export interface Point2D {
-  x: number;
-  y: number;
-}
+
 
 /**
  * Reconocedor de trazos a mano alzada (Gesture recognizer) para figuras geométricas.

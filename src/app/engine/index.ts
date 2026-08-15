@@ -13,6 +13,8 @@ export * from './ghost';
 export * from './compute';
 export * from './interaction';
 export * from './macros';
+export * from './canvas';
+
 
 
 
