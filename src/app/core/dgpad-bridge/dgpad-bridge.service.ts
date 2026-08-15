@@ -405,287 +405,6 @@ export class DgpadBridgeService {
     this.getLegacyBridge()?.saveFile?.();
   }
 
-  createBlocklyButton(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined') {
-        throw new Error('No se encontró $CANVAS');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-
-      if (!canvas || !Cn || typeof BlocklyButtonObject !== 'function') {
-        throw new Error('BlocklyButtonObject no está disponible en DGPad legacy');
-      }
-
-      if (typeof $U === 'undefined' || typeof $U.prompt !== 'function') {
-        throw new Error('$U.prompt no está disponible en DGPad legacy');
-      }
-
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      $U.prompt(
-        $L.create_blockly_program_change_message,
-        $L.create_blockly_program_name,
-        "text",
-        function(_old, _new) {
-          if (_new === "") {
-            _new = _old;
-          }
-
-          var obj = new BlocklyButtonObject(Cn, "blk_btn", _new, x, y);
-          obj.setOpacity(canvas.prefs.opacity.blockly_button);
-          canvas.addObject(obj);
-          Cn.compute();
-          canvas.paint();
-          canvas.blocklyManager.edit(obj);
-        },
-        450,
-        165,
-        430
-      );
-    `);
-  }
-
-  createExpression(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
-        throw new Error('ExpressionObject no está disponible en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      var obj = new ExpressionObject(Cn, "_a", "", "", "", "(1+sqrt(5))/2", x, y);
-
-      if (canvas.namesManager && canvas.namesManager.isVisible()) {
-        canvas.namesManager.setName(obj);
-      } else {
-        obj.setName("a");
-      }
-
-      obj.setT("");
-      obj.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
-      canvas.addObject(obj);
-      Cn.compute();
-      canvas.paint();
-    `);
-  }
-
-  createExpressionPoints(): void {
-    this.runLegacyScript(`
-      if (
-        typeof $CANVAS === 'undefined' ||
-        typeof ExpressionObject !== 'function' ||
-        typeof ListObject !== 'function'
-      ) {
-        throw new Error('ExpressionObject/ListObject no están disponibles en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      var cx = Cn.coordsSystem.x(Cn.getWidth() / 2);
-      var cy = Cn.coordsSystem.y(Cn.getHeight() / 2);
-      var l = Cn.coordsSystem.l(Cn.getHeight()) / 4;
-      var L = l * (1 + Math.sqrt(5)) / 2;
-
-      var t = [
-        [cx - L / 2, cy - l / 2],
-        [cx + L / 2, cy - l / 2],
-        [cx + L / 2, cy + l / 2],
-        [cx - L / 2, cy + l / 2],
-        [cx - L / 2, cy - l / 2]
-      ];
-
-      for (var i = 0; i < t.length; i++) {
-        t[i] = "[" + t[i].toString() + "]";
-      }
-
-      var expr = new ExpressionObject(Cn, "_a", "", "", "", "[" + t.toString() + "]", x, y);
-
-      if (canvas.namesManager && canvas.namesManager.isVisible()) {
-        canvas.namesManager.setName(expr);
-      } else {
-        expr.setName("a");
-      }
-
-      expr.setT("");
-      expr.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
-      canvas.addObject(expr);
-
-      var list = new ListObject(Cn, "_l", expr);
-      list.setSegmentsSize(0);
-
-      var c = expr.getColor();
-      list.setRGBColor(c.getR(), c.getG(), c.getB());
-      canvas.addObject(list);
-
-      Cn.compute();
-      canvas.paint();
-    `);
-  }
-
-  createExpressionSegments(): void {
-    this.runLegacyScript(`
-      if (
-        typeof $CANVAS === 'undefined' ||
-        typeof ExpressionObject !== 'function' ||
-        typeof ListObject !== 'function'
-      ) {
-        throw new Error('ExpressionObject/ListObject no están disponibles en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      var cx = Cn.coordsSystem.x(Cn.getWidth() / 2);
-      var cy = Cn.coordsSystem.y(Cn.getHeight() / 2);
-      var l = Cn.coordsSystem.l(Cn.getHeight()) / 4;
-      var L = l * (1 + Math.sqrt(5)) / 2;
-
-      var t = [
-        [cx - L / 2, cy - l / 2],
-        [cx + L / 2, cy - l / 2],
-        [cx + L / 2, cy + l / 2],
-        [cx - L / 2, cy + l / 2],
-        [cx - L / 2, cy - l / 2]
-      ];
-
-      for (var i = 0; i < t.length; i++) {
-        t[i] = "[" + t[i].toString() + "]";
-      }
-
-      var expr = new ExpressionObject(Cn, "_a", "", "", "", "[" + t.toString() + "]", x, y);
-
-      if (canvas.namesManager && canvas.namesManager.isVisible()) {
-        canvas.namesManager.setName(expr);
-      } else {
-        expr.setName("a");
-      }
-
-      expr.setT("");
-      expr.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
-      canvas.addObject(expr);
-
-      var list = new ListObject(Cn, "_l", expr);
-      list.setSegmentsSize(1);
-
-      var c = expr.getColor();
-      list.setRGBColor(c.getR(), c.getG(), c.getB());
-      canvas.addObject(list);
-
-      Cn.compute();
-      canvas.paint();
-    `);
-  }
-
-  createBoardPoints(): void {
-    this.getLegacyBridge()?.createBoardPoints?.();
-  }
-
-  createIntegerCursor(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
-        throw new Error('ExpressionObject no está disponible en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      var obj = new ExpressionObject(Cn, "_a", "", "", "", "", x, y);
-
-      obj.setName("n");
-      obj.setMin("0");
-      obj.setMax("10");
-      obj.setIncrement(1);
-
-      canvas.addObject(obj);
-      Cn.compute();
-      canvas.paint();
-    `);
-  }
-
-  createContinuousCursor(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
-        throw new Error('ExpressionObject no está disponible en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var Cn = canvas.getConstruction();
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      var obj = new ExpressionObject(Cn, "_a", "", "", "", "0", x, y);
-
-      obj.setName("m");
-      obj.setMin("-10");
-      obj.setMax("10");
-
-      canvas.addObject(obj);
-      Cn.compute();
-      canvas.paint();
-    `);
-  }
-
-  createEditWidget(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined' || typeof $CANVAS.addText !== 'function') {
-        throw new Error('addText no está disponible en DGPad legacy');
-      }
-
-      var canvas = $CANVAS;
-      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
-      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
-
-      canvas.addText(
-        $L.edit_widget_name +
-          " : <input id=\\"exp_name\\" interactiveinput=\\"replace\\">\\n\\n\\u00a7  name=\\"" +
-          $L.edit_widget_edit +
-          "\\" style=\\"font-size:18px;padding: 5px 10px;background: #4479BA;color: #FFF;-webkit-border-radius: 4px;-moz-border-radius: 4px;border-radius: 4px;border: solid 1px #20538D;text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);-webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);-moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);\\"\\nvar exp_n=Find(\\"exp_name\\");\\nvar exp_e=Find(\\"exp_edit\\");\\nexp_e.setAttribute(\\"target\\",exp_n.value);\\nRefreshInputs();\\n\\n\\u00a7\\n\\n<textarea id=\\"exp_edit\\" target=\\"aa\\" style=\\"width:500px;height:400px\\"></textarea>\\n",
-        x,
-        y,
-        550,
-        530,
-        "c:rgba(59,79,115,0.18);s:3;r:15;p:4"
-      );
-    `);
-  }
-
-  clearConstruction(): void {
-    this.runLegacyScript(`
-      if (typeof $CANVAS === 'undefined' || typeof $CANVAS.getConstruction !== 'function') {
-        throw new Error('No se encontró $CANVAS');
-      }
-
-      var Cn = $CANVAS.getConstruction();
-
-      if (!Cn || typeof Cn.getListObject !== 'function' || typeof Cn.safelyDelete !== 'function') {
-        throw new Error('No se pudo limpiar la construcción');
-      }
-
-      var objects = Cn.getListObject().slice();
-
-      for (var i = objects.length - 1; i >= 0; i--) {
-        Cn.safelyDelete(objects[i]);
-      }
-
-      if (typeof $CANVAS.paint === 'function') {
-        $CANVAS.paint();
-      }
-    `);
-  }
-
   createAnyPoint(name: string): void {
     this.runLegacyScript(`
       if (typeof $CANVAS === 'undefined' || typeof PointObject !== 'function') {
@@ -1060,6 +779,1559 @@ export class DgpadBridgeService {
 
       $CANVAS.undoManager.redo();
     `);
+  }
+
+  // ============================================================================
+  // FEATURE 1: BOARD POINTS - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Crear un tablero de puntos con un patrón base y rango numérico
+   *
+   * Crea múltiples puntos con nombres del patrón especificado:
+   * - basePattern: "A", startNum: 1, endNum: 3 → A1, A2, A3
+   *
+   * @param basePattern Patrón base del nombre (ej: "A", "P", "Punto")
+   * @param startNum Número inicial del rango (inclusive)
+   * @param endNum Número final del rango (inclusive)
+   * @returns Array de nombres creados o null si error
+   *
+   * @example
+   * const points = bridge.createBoardPoints('A', 1, 100);
+   * // Crea A1, A2, ..., A100
+   */
+  createBoardPoints(
+    basePattern?: string,
+    startNum?: number,
+    endNum?: number,
+  ): string[] | null {
+    try {
+      // Parámetros por defecto si se llama sin argumentos desde toolbar
+      const pattern = basePattern || 'A';
+      const start = startNum ?? 1;
+      const end = endNum ?? 100;
+
+      const bridge = this.getLegacyBridge();
+      if (!bridge) {
+        console.error('[Bridge] Legacy bridge not available');
+        return null;
+      }
+
+      if (!pattern || start > end) {
+        console.error('[Bridge] createBoardPoints: Invalid parameters');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof PointObject !== 'function') {
+            throw new Error('Canvas or PointObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var createdPoints = [];
+
+          for (var i = ${start}; i <= ${end}; i++) {
+            var name = ${JSON.stringify(pattern)} + i;
+            var x = 100 + i * 50;
+            var y = 100 + i * 50;
+            var point = new PointObject(canvas, name, x, y, false);
+            Cn.addObject(point);
+            createdPoints.push(name);
+          }
+
+          canvas.compute();
+          canvas.paint();
+
+          return createdPoints;
+        })()
+      `);
+
+      return Array.isArray(result) ? result : null;
+    } catch (error) {
+      console.error('[Bridge] createBoardPoints failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Obtener lista de todos los objetos actuales
+   *
+   * @returns Array de objetos con nombre y familia, o null si error
+   */
+  getObjectsList(): Array<{ name: string; family: string }> | null {
+    try {
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined') {
+            return [];
+          }
+
+          var Cn = $CANVAS.getConstruction();
+          if (!Cn || typeof Cn.getListObject !== 'function') {
+            return [];
+          }
+
+          var objects = Cn.getListObject();
+          var result = [];
+
+          for (var i = 0; i < objects.length; i++) {
+            var obj = objects[i];
+            if (obj && typeof obj.getFullName === 'function') {
+              result.push({
+                name: obj.getFullName(),
+                family: obj.family || 'Unknown'
+              });
+            }
+          }
+
+          return result;
+        })()
+      `);
+
+      return Array.isArray(result) ? result : null;
+    } catch (error) {
+      console.error('[Bridge] getObjectsList failed:', error);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 2: CALCULATOR CONVERSIONS - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Convertir una expresión matemática a un PointObject
+   *
+   * @param expression Expresión matemática (ej: "(1+sqrt(5))/2")
+   * @returns Nombre del objeto creado o null si error
+   */
+  convertExpressionToPoint(expression: string): string | null {
+    try {
+      if (!expression || typeof expression !== 'string') {
+        console.error('[Bridge] convertExpressionToPoint: Invalid expression');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
+            throw new Error('Canvas or ExpressionObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+          var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+          var obj = new ExpressionObject(Cn, '_a', '', '', '', ${JSON.stringify(expression)}, x, y);
+
+          if (canvas.namesManager && canvas.namesManager.isVisible()) {
+            canvas.namesManager.setName(obj);
+          } else {
+            obj.setName('a');
+          }
+
+          obj.setT('');
+          obj.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+          canvas.addObject(obj);
+          Cn.compute();
+          canvas.paint();
+
+          return obj.getFullName();
+        })()
+      `);
+
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] convertExpressionToPoint failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Convertir una expresión matemática a un ListObject
+   *
+   * @param expression Expresión matemática que genera una lista
+   * @returns Nombre del objeto creado o null si error
+   */
+  convertExpressionToList(expression: string): string | null {
+    try {
+      if (!expression || typeof expression !== 'string') {
+        console.error('[Bridge] convertExpressionToList: Invalid expression');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (
+            typeof $CANVAS === 'undefined' ||
+            typeof ExpressionObject !== 'function' ||
+            typeof ListObject !== 'function'
+          ) {
+            throw new Error('Canvas, ExpressionObject or ListObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+          var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+          var expr = new ExpressionObject(Cn, '_a', '', '', '', ${JSON.stringify(expression)}, x, y);
+
+          if (canvas.namesManager && canvas.namesManager.isVisible()) {
+            canvas.namesManager.setName(expr);
+          } else {
+            expr.setName('a');
+          }
+
+          expr.setT('');
+          expr.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+          canvas.addObject(expr);
+
+          var list = new ListObject(Cn, '_l', expr);
+          list.setSegmentsSize(0);
+          var c = expr.getColor();
+          list.setRGBColor(c.getR(), c.getG(), c.getB());
+          canvas.addObject(list);
+
+          Cn.compute();
+          canvas.paint();
+
+          return list.getFullName();
+        })()
+      `);
+
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] convertExpressionToList failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Convertir una expresión matemática a un FunctionObject
+   *
+   * @param expression Expresión matemática que define una función
+   * @returns Nombre del objeto creado o null si error
+   */
+  convertExpressionToFunction(expression: string): string | null {
+    try {
+      if (!expression || typeof expression !== 'string') {
+        console.error('[Bridge] convertExpressionToFunction: Invalid expression');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (
+            typeof $CANVAS === 'undefined' ||
+            typeof ExpressionObject !== 'function' ||
+            typeof FunctionObject !== 'function'
+          ) {
+            throw new Error('Canvas, ExpressionObject or FunctionObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+          var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+          var func = new FunctionObject(Cn, '_f', ${JSON.stringify(expression)}, 'x', x, y);
+
+          if (canvas.namesManager && canvas.namesManager.isVisible()) {
+            canvas.namesManager.setName(func);
+          } else {
+            func.setName('f');
+          }
+
+          func.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+          canvas.addObject(func);
+          Cn.compute();
+          canvas.paint();
+
+          return func.getFullName();
+        })()
+      `);
+
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] convertExpressionToFunction failed:', error);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 3: OTHER TOOLS - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Abrir el menú de herramientas adicionales
+   */
+  openOtherTools(): void {
+    try {
+      this.setMode('build');
+    } catch (error) {
+      console.error('[Bridge] openOtherTools failed:', error);
+    }
+  }
+
+  /**
+   * Crear un Edit Widget (widget de edición de expresión)
+   *
+   * @returns true si se creó correctamente
+   */
+  createEditWidgetAction(): boolean {
+    try {
+      this.createEditWidget_();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createEditWidgetAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Método auxiliar interno: Crear Edit Widget
+   */
+  private createEditWidget_(): void {
+    this.runLegacyScript(`
+      if (typeof $CANVAS === 'undefined' || typeof $CANVAS.addText !== 'function') {
+        throw new Error('addText no está disponible en DGPad legacy');
+      }
+
+      var canvas = $CANVAS;
+      var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+      var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+      canvas.addText(
+        $L.edit_widget_name +
+          " : <input id=\\"exp_name\\" interactiveinput=\\"replace\\">\\n\\n\\u00a7  name=\\"" +
+          $L.edit_widget_edit +
+          "\\" style=\\"font-size:18px;padding: 5px 10px;background: #4479BA;color: #FFF;-webkit-border-radius: 4px;-moz-border-radius: 4px;border-radius: 4px;border: solid 1px #20538D;text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);-webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);-moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);\\"\\nvar exp_n=Find(\\"exp_name\\");\\nvar exp_e=Find(\\"exp_edit\\");\\nexp_e.setAttribute(\\"target\\",exp_n.value);\\nRefreshInputs();\\n\\n\\u00a7\\n\\n<textarea id=\\"exp_edit\\" target=\\"aa\\" style=\\"width:500px;height:400px\\"></textarea>\\n",
+        x,
+        y,
+        550,
+        530,
+        "c:rgba(59,79,115,0.18);s:3;r:15;p:4"
+      );
+    `);
+  }
+
+  /**
+   * Crear un Edit Widget (compatibilidad pública)
+   */
+  createEditWidget(): void {
+    try {
+      this.createEditWidget_();
+    } catch (error) {
+      console.error('[Bridge] createEditWidget failed:', error);
+    }
+  }
+
+  /**
+   * Limpiar la construcción (eliminar todos los objetos)
+   *
+   * @returns true si se limpió correctamente
+   */
+  clearConstructionAction(): boolean {
+    try {
+      this.clearConstruction();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] clearConstructionAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Limpiar la construcción (eliminar todos los objetos) - método público
+   */
+  clearConstruction(): void {
+    try {
+      this.runLegacyScript(`
+        if (typeof $CANVAS === 'undefined' || typeof $CANVAS.getConstruction !== 'function') {
+          throw new Error('No se encontró $CANVAS');
+        }
+
+        var Cn = $CANVAS.getConstruction();
+
+        if (!Cn || typeof Cn.getListObject !== 'function' || typeof Cn.safelyDelete !== 'function') {
+          throw new Error('No se pudo limpiar la construcción');
+        }
+
+        var objects = Cn.getListObject().slice();
+
+        for (var i = objects.length - 1; i >= 0; i--) {
+          Cn.safelyDelete(objects[i]);
+        }
+
+        if (typeof $CANVAS.paint === 'function') {
+          $CANVAS.paint();
+        }
+      `);
+    } catch (error) {
+      console.error('[Bridge] clearConstruction failed:', error);
+    }
+  }
+
+  /**
+   * Deshacer última acción (wrapper mejorado de undo)
+   *
+   * @returns true si undo se ejecutó
+   */
+  undoAction(): boolean {
+    try {
+      this.undo();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] undoAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Rehacer última acción deshecha (wrapper mejorado de redo)
+   *
+   * @returns true si redo se ejecutó
+   */
+  redoAction(): boolean {
+    try {
+      this.redo();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] redoAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear un cursor entero (slider discreto)
+   *
+   * @param name Nombre del cursor (ej: "n")
+   * @param minValue Valor mínimo (default: 0)
+   * @param maxValue Valor máximo (default: 10)
+   * @returns true si se creó correctamente
+   */
+  createIntegerCursor(name?: string, minValue?: number, maxValue?: number): boolean {
+    try {
+      const cursorName = name || 'n';
+      const min = minValue ?? 0;
+      const max = maxValue ?? 10;
+
+      if (!Number.isInteger(min) || !Number.isInteger(max)) {
+        console.error('[Bridge] createIntegerCursor: Invalid range');
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
+            throw new Error('Canvas or ExpressionObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+          var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+          var obj = new ExpressionObject(Cn, '_a', '', '', '', '', x, y);
+          obj.setName(${JSON.stringify(cursorName)});
+          obj.setMin(${JSON.stringify(min.toString())});
+          obj.setMax(${JSON.stringify(max.toString())});
+          obj.setIncrement(1);
+
+          canvas.addObject(obj);
+          Cn.compute();
+          canvas.paint();
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createIntegerCursor failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear un cursor continuo (slider analógico)
+   *
+   * @param name Nombre del cursor (ej: "m")
+   * @param minValue Valor mínimo (default: -10)
+   * @param maxValue Valor máximo (default: 10)
+   * @returns true si se creó correctamente
+   */
+  createContinuousCursor(
+    name?: string,
+    minValue?: number,
+    maxValue?: number,
+  ): boolean {
+    try {
+      const cursorName = name || 'm';
+      const min = minValue ?? -10;
+      const max = maxValue ?? 10;
+
+      if (min >= max) {
+        console.error('[Bridge] createContinuousCursor: Invalid range');
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
+            throw new Error('Canvas or ExpressionObject not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+          var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+          var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+          var obj = new ExpressionObject(Cn, '_a', '', '', '', '0', x, y);
+          obj.setName(${JSON.stringify(cursorName)});
+          obj.setMin(${JSON.stringify(min.toString())});
+          obj.setMax(${JSON.stringify(max.toString())});
+
+          canvas.addObject(obj);
+          Cn.compute();
+          canvas.paint();
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createContinuousCursor failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Alias para compatibilidad: crear un cursor continuo con parámetros por nombre
+   */
+  createContinuousCursorAction(
+    name = 'm',
+    minValue = -10,
+    maxValue = 10,
+  ): boolean {
+    return this.createContinuousCursor(name, minValue, maxValue);
+  }
+
+  /**
+   * Crear Expression Points (lista de puntos desde expresión)
+   *
+   * @returns true si se creó correctamente
+   */
+  createExpressionPointsAction(): boolean {
+    try {
+      this.createExpressionPoints();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createExpressionPointsAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear Expression Points (lista de puntos desde expresión) - método público
+   */
+  createExpressionPoints(): void {
+    try {
+      this.runLegacyScript(`
+        if (
+          typeof $CANVAS === 'undefined' ||
+          typeof ExpressionObject !== 'function' ||
+          typeof ListObject !== 'function'
+        ) {
+          throw new Error('ExpressionObject/ListObject no están disponibles en DGPad legacy');
+        }
+
+        var canvas = $CANVAS;
+        var Cn = canvas.getConstruction();
+        var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+        var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+        var cx = Cn.coordsSystem.x(Cn.getWidth() / 2);
+        var cy = Cn.coordsSystem.y(Cn.getHeight() / 2);
+        var l = Cn.coordsSystem.l(Cn.getHeight()) / 4;
+        var L = l * (1 + Math.sqrt(5)) / 2;
+
+        var t = [
+          [cx - L / 2, cy - l / 2],
+          [cx + L / 2, cy - l / 2],
+          [cx + L / 2, cy + l / 2],
+          [cx - L / 2, cy + l / 2],
+          [cx - L / 2, cy - l / 2]
+        ];
+
+        for (var i = 0; i < t.length; i++) {
+          t[i] = "[" + t[i].toString() + "]";
+        }
+
+        var expr = new ExpressionObject(Cn, "_a", "", "", "", "[" + t.toString() + "]", x, y);
+
+        if (canvas.namesManager && canvas.namesManager.isVisible()) {
+          canvas.namesManager.setName(expr);
+        } else {
+          expr.setName("a");
+        }
+
+        expr.setT("");
+        expr.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+        canvas.addObject(expr);
+
+        var list = new ListObject(Cn, "_l", expr);
+        list.setSegmentsSize(0);
+
+        var c = expr.getColor();
+        list.setRGBColor(c.getR(), c.getG(), c.getB());
+        canvas.addObject(list);
+
+        Cn.compute();
+        canvas.paint();
+      `);
+    } catch (error) {
+      console.error('[Bridge] createExpressionPoints failed:', error);
+    }
+  }
+
+  /**
+   * Crear Expression Segments (segmentos desde expresión)
+   *
+   * @returns true si se creó correctamente
+   */
+  createExpressionSegmentsAction(): boolean {
+    try {
+      this.createExpressionSegments();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createExpressionSegmentsAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear Expression Segments (segmentos desde expresión) - método público
+   */
+  createExpressionSegments(): void {
+    try {
+      this.runLegacyScript(`
+        if (
+          typeof $CANVAS === 'undefined' ||
+          typeof ExpressionObject !== 'function' ||
+          typeof ListObject !== 'function'
+        ) {
+          throw new Error('ExpressionObject/ListObject no están disponibles en DGPad legacy');
+        }
+
+        var canvas = $CANVAS;
+        var Cn = canvas.getConstruction();
+        var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+        var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+        var cx = Cn.coordsSystem.x(Cn.getWidth() / 2);
+        var cy = Cn.coordsSystem.y(Cn.getHeight() / 2);
+        var l = Cn.coordsSystem.l(Cn.getHeight()) / 4;
+        var L = l * (1 + Math.sqrt(5)) / 2;
+
+        var t = [
+          [cx - L / 2, cy - l / 2],
+          [cx + L / 2, cy - l / 2],
+          [cx + L / 2, cy + l / 2],
+          [cx - L / 2, cy + l / 2],
+          [cx - L / 2, cy - l / 2]
+        ];
+
+        for (var i = 0; i < t.length; i++) {
+          t[i] = "[" + t[i].toString() + "]";
+        }
+
+        var expr = new ExpressionObject(Cn, "_a", "", "", "", "[" + t.toString() + "]", x, y);
+
+        if (canvas.namesManager && canvas.namesManager.isVisible()) {
+          canvas.namesManager.setName(expr);
+        } else {
+          expr.setName("a");
+        }
+
+        expr.setT("");
+        expr.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+        canvas.addObject(expr);
+
+        var list = new ListObject(Cn, "_l", expr);
+        list.setSegmentsSize(1);
+
+        var c = expr.getColor();
+        list.setRGBColor(c.getR(), c.getG(), c.getB());
+        canvas.addObject(list);
+
+        Cn.compute();
+        canvas.paint();
+      `);
+    } catch (error) {
+      console.error('[Bridge] createExpressionSegments failed:', error);
+    }
+  }
+
+  /**
+   * Crear un Blockly Button (botón que abre Blockly editor)
+   *
+   * @returns true si se creó correctamente
+   */
+  createBlocklyButtonAction(): boolean {
+    try {
+      this.createBlocklyButton();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createBlocklyButtonAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear un Blockly Button (botón que abre Blockly editor) - método público
+   */
+  createBlocklyButton(): void {
+    try {
+      this.runLegacyScript(`
+        if (typeof $CANVAS === 'undefined') {
+          throw new Error('No se encontró $CANVAS');
+        }
+
+        var canvas = $CANVAS;
+        var Cn = canvas.getConstruction();
+
+        if (!canvas || !Cn || typeof BlocklyButtonObject !== 'function') {
+          throw new Error('BlocklyButtonObject no está disponible en DGPad legacy');
+        }
+
+        if (typeof $U === 'undefined' || typeof $U.prompt !== 'function') {
+          throw new Error('$U.prompt no está disponible en DGPad legacy');
+        }
+
+        var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+        var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+        $U.prompt(
+          $L.create_blockly_program_change_message,
+          $L.create_blockly_program_name,
+          "text",
+          function(_old, _new) {
+            if (_new === "") {
+              _new = _old;
+            }
+
+            var obj = new BlocklyButtonObject(Cn, "blk_btn", _new, x, y);
+            obj.setOpacity(canvas.prefs.opacity.blockly_button);
+            canvas.addObject(obj);
+            Cn.compute();
+            canvas.paint();
+            canvas.blocklyManager.edit(obj);
+          },
+          450,
+          165,
+          430
+        );
+      `);
+    } catch (error) {
+      console.error('[Bridge] createBlocklyButton failed:', error);
+    }
+  }
+
+  /**
+   * Crear Expression (objeto de expresión matemática)
+   *
+   * @returns true si se creó correctamente
+   */
+  createExpressionAction(): boolean {
+    try {
+      this.createExpression();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] createExpressionAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Crear Expression (objeto de expresión matemática) - método público
+   */
+  createExpression(): void {
+    try {
+      this.runLegacyScript(`
+        if (typeof $CANVAS === 'undefined' || typeof ExpressionObject !== 'function') {
+          throw new Error('ExpressionObject no está disponible en DGPad legacy');
+        }
+
+        var canvas = $CANVAS;
+        var Cn = canvas.getConstruction();
+        var x = Math.round(canvas.getWidth() / 2 / 10) * 10;
+        var y = Math.round(canvas.getHeight() / 2 / 10) * 10;
+
+        var obj = new ExpressionObject(Cn, "_a", "", "", "", "(1+sqrt(5))/2", x, y);
+
+        if (canvas.namesManager && canvas.namesManager.isVisible()) {
+          canvas.namesManager.setName(obj);
+        } else {
+          obj.setName("a");
+        }
+
+        obj.setT("");
+        obj.setRGBColor(Math.random() * 128, Math.random() * 128, Math.random() * 128);
+        canvas.addObject(obj);
+        Cn.compute();
+        canvas.paint();
+      `);
+    } catch (error) {
+      console.error('[Bridge] createExpression failed:', error);
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 4: HISTORY - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Guardar snapshot actual del historial
+   *
+   * @returns Índice del snapshot guardado o null si error
+   */
+  saveHistorySnapshotAction(): number | null {
+    try {
+      this.saveHistorySnapshot();
+      const entries = this.getHistoryEntries();
+      return entries && entries.length > 0 ? entries[entries.length - 1].index : null;
+    } catch (error) {
+      console.error('[Bridge] saveHistorySnapshotAction failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Abrir/restaurar entrada del historial en índice específico
+   *
+   * @param index Índice del snapshot a restaurar
+   * @returns true si se restauró correctamente
+   */
+  openHistoryEntryAction(index: number): boolean {
+    try {
+      if (!Number.isInteger(index) || index < 0) {
+        console.error('[Bridge] openHistoryEntryAction: Invalid index');
+        return false;
+      }
+
+      this.openHistoryEntry(index);
+      return true;
+    } catch (error) {
+      console.error('[Bridge] openHistoryEntryAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Eliminar entrada del historial en índice específico
+   *
+   * @param index Índice del snapshot a eliminar
+   * @returns true si se eliminó correctamente
+   */
+  deleteHistoryEntryAction(index: number): boolean {
+    try {
+      if (!Number.isInteger(index) || index < 0) {
+        console.error('[Bridge] deleteHistoryEntryAction: Invalid index');
+        return false;
+      }
+
+      const bridge = this.getLegacyBridge();
+      if (!bridge) {
+        console.error('[Bridge] Legacy bridge not available');
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.historyManager) {
+            throw new Error('historyManager not available');
+          }
+
+          if (typeof $CANVAS.historyManager.removeEntry === 'function') {
+            $CANVAS.historyManager.removeEntry(${index});
+          }
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] deleteHistoryEntryAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Limpiar todas las entradas del historial no bloqueadas
+   *
+   * @returns true si se completó
+   */
+  clearUnlockedHistoryAction(): boolean {
+    try {
+      this.clearUnlockedHistory();
+      return true;
+    } catch (error) {
+      console.error('[Bridge] clearUnlockedHistoryAction failed:', error);
+      return false;
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 5: ADVANCED PROPERTIES - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Actualizar propiedad avanzada en objeto(s) seleccionado(s)
+   *
+   * @param property Nombre de la propiedad
+   * @param value Nuevo valor
+   * @param targets Array de nombres de objetos (si undefined, usar selección actual)
+   * @returns true si se actualizó correctamente
+   */
+  updateAdvancedProperty(
+    property: string,
+    value: unknown,
+    targets?: string[],
+  ): boolean {
+    try {
+      if (!property || value === null || value === undefined) {
+        console.error('[Bridge] updateAdvancedProperty: Invalid parameters');
+        return false;
+      }
+
+      const bridge = this.getLegacyBridge();
+      if (!bridge) {
+        console.error('[Bridge] Legacy bridge not available');
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined') {
+            throw new Error('Canvas not available');
+          }
+
+          var canvas = $CANVAS;
+          var Cn = canvas.getConstruction();
+
+          var objectsToUpdate = ${targets ? JSON.stringify(targets) : '[]'};
+
+          if (objectsToUpdate.length === 0) {
+            var selectedObj = canvas.selectedObject;
+            if (selectedObj) {
+              objectsToUpdate = [selectedObj.getFullName()];
+            }
+          }
+
+          for (var i = 0; i < objectsToUpdate.length; i++) {
+            var obj = Cn.find(objectsToUpdate[i]);
+            if (!obj) continue;
+
+            var propName = 'set' + ${JSON.stringify(property)}.charAt(0).toUpperCase() + 
+                          ${JSON.stringify(property)}.slice(1);
+
+            if (typeof obj[propName] === 'function') {
+              obj[propName](${JSON.stringify(value)});
+            }
+          }
+
+          canvas.paint();
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] updateAdvancedProperty failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtener restricciones/validaciones para una propiedad específica
+   *
+   * @param family Familia de objeto (ej: "Point", "Line", "Circle")
+   * @param property Nombre de la propiedad
+   * @returns Objeto con restricciones o null
+   */
+  getPropertyConstraints(
+    family: string,
+    property: string,
+  ): {
+    type: string;
+    minValue?: number;
+    maxValue?: number;
+    step?: number;
+    allowedValues?: (string | number)[];
+    help?: string;
+  } | null {
+    try {
+      if (!family || !property) {
+        console.error('[Bridge] getPropertyConstraints: Invalid parameters');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          var constraints = {
+            precision: { type: 'number', minValue: 0, maxValue: 10, step: 1, help: 'Precisión de cálculo' },
+            increment: { type: 'number', minValue: 0.01, maxValue: 100, step: 0.01, help: 'Incremento del cursor' },
+            shape: { type: 'select', allowedValues: [0, 1, 2, 3, 4], help: 'Forma del punto' },
+            dash: { type: 'boolean', help: 'Línea discontinua' },
+            noMouse: { type: 'boolean', help: 'No responde a mouse' },
+            track: { type: 'boolean', help: 'Seguimiento de movimiento' },
+            angle360: { type: 'boolean', help: 'Ángulo 360 grados' },
+            exclusive: { type: 'boolean', help: 'Modo exclusivo' },
+            layer: { type: 'number', minValue: 0, maxValue: 1000, step: 1, help: 'Capa del objeto' },
+            axisWidth: { type: 'number', minValue: 1, maxValue: 10, step: 1, help: 'Ancho del eje' },
+            gridWidth: { type: 'number', minValue: 1, maxValue: 100, step: 1, help: 'Ancho de cuadrícula' },
+            showGrid: { type: 'boolean', help: 'Mostrar cuadrícula' },
+            onlyPositive: { type: 'boolean', help: 'Solo valores positivos' },
+            centerZoom: { type: 'boolean', help: 'Zoom centrado' }
+          };
+
+          return constraints[${JSON.stringify(property)}] || null;
+        })()
+      `);
+
+      if (result && typeof result === 'object' && 'type' in result) {
+        return result as {
+          type: string;
+          minValue?: number;
+          maxValue?: number;
+          step?: number;
+          allowedValues?: (string | number)[];
+          help?: string;
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('[Bridge] getPropertyConstraints failed:', error);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 6: MACROS - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Obtener próximo prompt en ejecución de macro
+   *
+   * @param response Respuesta a prompt anterior
+   * @returns Próximo prompt o null si macro completada
+   */
+  getNextMacroPrompt(response: string): LegacyActiveMacro | null {
+    try {
+      if (!response || typeof response !== 'string') {
+        console.error('[Bridge] getNextMacroPrompt: Invalid response');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.macroManager) {
+            return null;
+          }
+
+          if (typeof $CANVAS.macroManager.processResponse === 'function') {
+            return $CANVAS.macroManager.processResponse(${JSON.stringify(response)});
+          }
+
+          return $CANVAS.macroManager.getActiveMacro ? $CANVAS.macroManager.getActiveMacro() : null;
+        })()
+      `);
+
+      if (result && typeof result === 'object' && 'key' in result) {
+        return result as LegacyActiveMacro;
+      }
+      return null;
+    } catch (error) {
+      console.error('[Bridge] getNextMacroPrompt failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Completar ejecución de macro
+   *
+   * @returns true si se completó correctamente
+   */
+  completeMacroAction(): boolean {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge) {
+        console.error('[Bridge] Legacy bridge not available');
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.macroManager) {
+            return false;
+          }
+
+          if (typeof $CANVAS.macroManager.completeMacro === 'function') {
+            $CANVAS.macroManager.completeMacro();
+            return true;
+          }
+
+          return false;
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] completeMacroAction failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtener draft (borrador) de macro específica
+   *
+   * @param key Identificador de la macro
+   * @returns Draft con parámetros y targets o null
+   */
+  getMacroDraftAction(key: string): { params: string[]; targets: string[] } | null {
+    try {
+      if (!key || typeof key !== 'string') {
+        console.error('[Bridge] getMacroDraftAction: Invalid key');
+        return null;
+      }
+
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.macroManager) {
+            return null;
+          }
+
+          if (typeof $CANVAS.macroManager.getDraft === 'function') {
+            return $CANVAS.macroManager.getDraft(${JSON.stringify(key)});
+          }
+
+          return null;
+        })()
+      `);
+
+      if (
+        result &&
+        typeof result === 'object' &&
+        'params' in result &&
+        'targets' in result &&
+        Array.isArray(result.params) &&
+        Array.isArray(result.targets)
+      ) {
+        return result as { params: string[]; targets: string[] };
+      }
+      return null;
+    } catch (error) {
+      console.error('[Bridge] getMacroDraftAction failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Guardar draft de ejecución de macro
+   *
+   * @param macroKey Identificador de la macro
+   * @param params Array de parámetros/respuestas
+   * @param targets Array de nombres de objetos seleccionados
+   */
+  saveMacroDraftAction(
+    macroKey: string,
+    params: string[],
+    targets: string[],
+  ): void {
+    try {
+      if (!macroKey) {
+        console.error('[Bridge] saveMacroDraftAction: Invalid macro key');
+        return;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.macroManager) {
+            return;
+          }
+
+          if (typeof $CANVAS.macroManager.saveDraft === 'function') {
+            $CANVAS.macroManager.saveDraft(${JSON.stringify(macroKey)}, 
+              ${JSON.stringify(params)}, 
+              ${JSON.stringify(targets)});
+          }
+        })()
+      `);
+    } catch (error) {
+      console.error('[Bridge] saveMacroDraftAction failed:', error);
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 7: NAMES - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Renombrar un objeto existente
+   *
+   * @param oldName Nombre actual del objeto
+   * @param newName Nuevo nombre (debe ser único)
+   * @returns true si se renombró correctamente
+   */
+  renameObject(oldName: string, newName: string): boolean {
+    try {
+      if (!oldName || !newName || oldName === newName) {
+        console.error('[Bridge] renameObject: Invalid names');
+        return false;
+      }
+
+      // Verificar que newName no existe
+      const usedNames = this.getUsedNames();
+      if (usedNames.includes(newName)) {
+        console.error(`[Bridge] renameObject: Name "${newName}" already exists`);
+        return false;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined') {
+            throw new Error('Canvas not available');
+          }
+
+          var Cn = $CANVAS.getConstruction();
+          var obj = Cn.find(${JSON.stringify(oldName)});
+
+          if (!obj) {
+            throw new Error('Object not found: ' + ${JSON.stringify(oldName)});
+          }
+
+          if (typeof obj.setName === 'function') {
+            obj.setName(${JSON.stringify(newName)});
+          }
+
+          $CANVAS.paint();
+        })()
+      `);
+
+      return true;
+    } catch (error) {
+      console.error('[Bridge] renameObject failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mostrar o ocultar nombres de objetos en canvas
+   *
+   * @param visible true para mostrar, false para ocultar
+   */
+  setNamesVisible(visible: boolean): void {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge) {
+        console.error('[Bridge] Legacy bridge not available');
+        return;
+      }
+
+      this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || !$CANVAS.namesManager) {
+            return;
+          }
+
+          if (${visible}) {
+            if (typeof $CANVAS.namesManager.show === 'function') {
+              $CANVAS.namesManager.show();
+            } else if (typeof $CANVAS.namesManager.openNames === 'function') {
+              $CANVAS.namesManager.openNames();
+            }
+          } else {
+            if (typeof $CANVAS.namesManager.hide === 'function') {
+              $CANVAS.namesManager.hide();
+            } else if (typeof $CANVAS.namesManager.closeNames === 'function') {
+              $CANVAS.namesManager.closeNames();
+            }
+          }
+
+          $CANVAS.paint();
+        })()
+      `);
+    } catch (error) {
+      console.error('[Bridge] setNamesVisible failed:', error);
+    }
+  }
+
+  // ============================================================================
+  // FEATURE 8: EXPORT - Métodos Nuevos
+  // ============================================================================
+
+  /**
+   * Exportar figura como SVG
+   *
+   * @returns Contenido SVG como string o null si error
+   */
+  exportSvgAsString(): string | null {
+    try {
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof $CANVAS.exportSVG !== 'function') {
+            throw new Error('exportSVG not available');
+          }
+
+          return $CANVAS.exportSVG();
+        })()
+      `);
+
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportSvgAsString failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exportar figura como PNG
+   *
+   * @returns Data URL PNG o null si error
+   */
+  exportPngAsDataUrl(): string | null {
+    try {
+      const result = this.runLegacyScript(`
+        (function() {
+          if (typeof $CANVAS === 'undefined' || typeof $CANVAS.exportPNG !== 'function') {
+            throw new Error('exportPNG not available');
+          }
+
+          return $CANVAS.exportPNG();
+        })()
+      `);
+
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportPngAsDataUrl failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exportar texto con opciones
+   *
+   * @param options Opciones de exportación
+   * @returns Contenido de texto o null si error
+   */
+  exportTextWithOptions(options: LegacyExportOptions = {
+    fixWidgets: false,
+    fixDgScripts: false,
+    hideControlPanel: false,
+    disableZoom: false,
+  }): string | null {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge?.exportText) {
+        console.error('[Bridge] exportText not available');
+        return null;
+      }
+
+      const result = bridge.exportText(options);
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportTextWithOptions failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exportar como HTML con JavaScript
+   *
+   * @param options Opciones de exportación
+   * @returns Contenido HTML o null si error
+   */
+  exportHtmlJsWithOptions(options: LegacyExportOptions = {
+    fixWidgets: false,
+    fixDgScripts: false,
+    hideControlPanel: false,
+    disableZoom: false,
+  }): string | null {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge?.exportHtmlJs) {
+        console.error('[Bridge] exportHtmlJs not available');
+        return null;
+      }
+
+      const result = bridge.exportHtmlJs(options);
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportHtmlJsWithOptions failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exportar como HTML simplificado
+   *
+   * @param options Opciones de exportación
+   * @returns Contenido HTML o null si error
+   */
+  exportHtmlWithOptions(options: LegacyExportOptions = {
+    fixWidgets: false,
+    fixDgScripts: false,
+    hideControlPanel: false,
+    disableZoom: false,
+  }): string | null {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge?.exportHtml) {
+        console.error('[Bridge] exportHtml not available');
+        return null;
+      }
+
+      const result = bridge.exportHtml(options);
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportHtmlWithOptions failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Exportar como HTML responsive
+   *
+   * @param options Opciones de exportación
+   * @returns Contenido HTML o null si error
+   */
+  exportResponsiveWithOptions(options: LegacyExportOptions = {
+    fixWidgets: false,
+    fixDgScripts: false,
+    hideControlPanel: false,
+    disableZoom: false,
+  }): string | null {
+    try {
+      const bridge = this.getLegacyBridge();
+      if (!bridge?.exportResponsive) {
+        console.error('[Bridge] exportResponsive not available');
+        return null;
+      }
+
+      const result = bridge.exportResponsive(options);
+      return typeof result === 'string' ? result : null;
+    } catch (error) {
+      console.error('[Bridge] exportResponsiveWithOptions failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Descargar figura como SVG
+   */
+  downloadSvg(): void {
+    try {
+      const content = this.exportSvgAsString();
+      if (!content) {
+        console.error('[Bridge] No SVG content to download');
+        return;
+      }
+
+      this.downloadTextFile(content, 'dgpad-export.svg', 'image/svg+xml;charset=utf-8');
+    } catch (error) {
+      console.error('[Bridge] downloadSvg failed:', error);
+    }
+  }
+
+  /**
+   * Descargar figura como PNG
+   */
+  downloadPngAction(): void {
+    try {
+      const dataUrl = this.exportPngAsDataUrl();
+      if (!dataUrl) {
+        console.error('[Bridge] No PNG data to download');
+        return;
+      }
+
+      this.downloadDataUrl(dataUrl, 'dgpad-export.png');
+    } catch (error) {
+      console.error('[Bridge] downloadPngAction failed:', error);
+    }
+  }
+
+  /**
+   * Descargar figura como texto
+   *
+   * @param options Opciones de exportación
+   */
+  downloadTextFile_(): void {
+    try {
+      const content = this.exportTextWithOptions();
+      if (!content) {
+        console.error('[Bridge] No text content to download');
+        return;
+      }
+
+      this.downloadTextFile(content, 'dgpad-export.txt', 'text/plain;charset=utf-8');
+    } catch (error) {
+      console.error('[Bridge] downloadTextFile_ failed:', error);
+    }
+  }
+
+  /**
+   * Descargar figura como HTML con JS
+   */
+  downloadHtmlJs(): void {
+    try {
+      const content = this.exportHtmlJsWithOptions();
+      if (!content) {
+        console.error('[Bridge] No HTML+JS content to download');
+        return;
+      }
+
+      this.downloadTextFile(content, 'dgpad-export-html-js.html', 'text/html;charset=utf-8');
+    } catch (error) {
+      console.error('[Bridge] downloadHtmlJs failed:', error);
+    }
+  }
+
+  /**
+   * Descargar figura como HTML simplificado
+   */
+  downloadHtmlStandalone(): void {
+    try {
+      const content = this.exportHtmlWithOptions();
+      if (!content) {
+        console.error('[Bridge] No HTML content to download');
+        return;
+      }
+
+      this.downloadTextFile(content, 'dgpad-export.html', 'text/html;charset=utf-8');
+    } catch (error) {
+      console.error('[Bridge] downloadHtmlStandalone failed:', error);
+    }
+  }
+
+  /**
+   * Descargar figura como HTML responsive
+   */
+  downloadResponsive(): void {
+    try {
+      const content = this.exportResponsiveWithOptions();
+      if (!content) {
+        console.error('[Bridge] No responsive HTML content to download');
+        return;
+      }
+
+      this.downloadTextFile(
+        content,
+        'dgpad-export-responsive.html',
+        'text/html;charset=utf-8',
+      );
+    } catch (error) {
+      console.error('[Bridge] downloadResponsive failed:', error);
+    }
   }
 
   
