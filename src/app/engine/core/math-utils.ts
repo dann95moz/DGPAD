@@ -386,6 +386,129 @@ export class MathUtils {
   }
 
   /**
+   * Determina si un punto (xM, yM) está contenido en el arco entre fromAngle y toAngle
+   */
+  static ptOnArc(xO: number, yO: number, xM: number, yM: number, fromAngle: number, toAngle: number, trigo: boolean): boolean {
+    const m = MathUtils.angleH(xM - xO, yM - yO);
+    let ea = trigo ? toAngle - fromAngle : MathUtils.DOUBLE_PI - toAngle + fromAngle;
+    if (ea > MathUtils.DOUBLE_PI) ea -= MathUtils.DOUBLE_PI;
+    if (ea < 0) ea += MathUtils.DOUBLE_PI;
+
+    let em = trigo ? m - fromAngle : MathUtils.DOUBLE_PI - toAngle + m;
+    if (em > MathUtils.DOUBLE_PI) em -= MathUtils.DOUBLE_PI;
+    if (em < 0) em += MathUtils.DOUBLE_PI;
+
+    return em < ea;
+  }
+
+  /**
+   * Determina si el puntero está cerca del arco circular
+   */
+  static isNearToArc(
+    xO: number,
+    yO: number,
+    aoc: number,
+    fromAngle: number,
+    toAngle: number,
+    trigo: boolean,
+    r: number,
+    xM: number,
+    yM: number,
+    d: number,
+  ): boolean {
+    if (isNaN(xO + yO + r)) return false;
+    const x = xM - xO;
+    const y = yM - yO;
+    if (Math.abs(x * x + y * y - r * r - d * d) > 2 * d * r) return false;
+
+    const m = MathUtils.angleH(xM - xO, yM - yO);
+    let gom = trigo ? m - fromAngle : MathUtils.DOUBLE_PI - toAngle + m;
+    gom += ((gom < 0 ? 1 : 0) - (gom > MathUtils.DOUBLE_PI ? 1 : 0)) * MathUtils.DOUBLE_PI;
+
+    return gom <= aoc;
+  }
+
+  /**
+   * Convierte color HEX a componentes RGB
+   */
+  static hexToRGB(hex: string): { r: number; g: number; b: number } {
+    if (hex.charAt(0) === '#') {
+      const cut = hex.substring(1, 7);
+      return {
+        r: parseInt(cut.substring(0, 2), 16) || 0,
+        g: parseInt(cut.substring(2, 4), 16) || 0,
+        b: parseInt(cut.substring(4, 6), 16) || 0,
+      };
+    }
+    return { r: 0, g: 0, b: 0 };
+  }
+
+  /**
+   * Convierte color HEX a HSV (Hue, Saturation, Value)
+   */
+  static hexToHSV(hex: string): { h: number; s: number; v: number } {
+    const rgb = MathUtils.hexToRGB(hex);
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+
+    let h = 0;
+    const s = max === 0 ? 0 : diff / max;
+    const v = max;
+
+    if (diff !== 0) {
+      if (max === r) {
+        h = (g - b) / diff + (g < b ? 6 : 0);
+      } else if (max === g) {
+        h = (b - r) / diff + 2;
+      } else {
+        h = (r - g) / diff + 4;
+      }
+      h /= 6;
+    }
+
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      v: Math.round(v * 100),
+    };
+  }
+
+  /**
+   * Formatea un arreglo numérico o anidado en representación textual
+   */
+  static parseArray(arr: unknown, prec?: number): string {
+    if (Array.isArray(arr)) {
+      const elts = arr.map((item) => MathUtils.parseArray(item, prec));
+      return `[${elts.join(', ')}]`;
+    }
+    if (typeof arr === 'number') {
+      if (isNaN(arr)) return '???';
+      return prec ? (Math.round(arr * prec) / prec).toString() : arr.toString();
+    }
+    return String(arr);
+  }
+
+  /**
+   * Extrae el delta de rotación de rueda del ratón normalizado
+   */
+  static extractDelta(e: WheelEvent): number {
+    if (e.deltaY) return -e.deltaY;
+    return 0;
+  }
+
+  /**
+   * Codifica un string a UTF-8
+   */
+  static utf8Encode(str: string): string {
+    return unescape(encodeURIComponent(str));
+  }
+
+  /**
    * Limpia acentos y caracteres especiales de nombres de objetos
    */
   static leaveAccents(str: string): string {
@@ -413,3 +536,4 @@ export class MathUtils {
     return vars;
   }
 }
+

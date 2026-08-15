@@ -4,4 +4,6 @@ export * from './math-utils';
 export * from './track-manager';
 export * from './coords-system';
 export * from './source-writer';
+export * from './timer';
+
 

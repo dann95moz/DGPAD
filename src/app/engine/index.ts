@@ -9,6 +9,9 @@ export * from './construction';
 export * from './constructors';
 export * from './undo';
 export * from './export';
+export * from './ghost';
+export * from './compute';
+
 
 
 
