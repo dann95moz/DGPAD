@@ -542,8 +542,54 @@ export class DgpadBridgeService {
     `);
   }
 
-  createMidPoint(_name: string, _pointA: string, _pointB: string): void {
-    throw new Error('Punto medio aún no está conectado en Angular');
+  createMidPoint(name: string, pointA: string, pointB: string): void {
+    this.runLegacyScript(`
+      if (typeof $CANVAS === 'undefined') {
+        throw new Error('No se encontró $CANVAS');
+      }
+
+      if (typeof MidPointObject !== 'function') {
+        throw new Error('MidPointObject no está disponible en DGPad legacy');
+      }
+
+      var Cn = $CANVAS.getConstruction();
+
+      if (!Cn) {
+        throw new Error('No se encontró la construcción');
+      }
+
+      if (typeof Cn.find !== 'function') {
+        throw new Error('Cn.find no está disponible en DGPad legacy');
+      }
+
+      var P1 = Cn.find(${JSON.stringify(pointA)});
+      var P2 = Cn.find(${JSON.stringify(pointB)});
+
+      if (!P1) {
+        throw new Error('No se encontró el punto ${pointA}');
+      }
+
+      if (!P2) {
+        throw new Error('No se encontró el punto ${pointB}');
+      }
+
+      var midpoint = new MidPointObject(
+        Cn,
+        ${JSON.stringify(name)},
+        P1,
+        P2
+      );
+
+      $CANVAS.addObject(midpoint);
+
+      if (typeof midpoint.compute === 'function') {
+        midpoint.compute();
+      }
+
+      if (typeof $CANVAS.paint === 'function') {
+        $CANVAS.paint();
+      }
+    `);
   }
 
   getUsedNames(): string[] {
@@ -791,35 +837,48 @@ export class DgpadBridgeService {
    * Crea múltiples puntos con nombres del patrón especificado:
    * - basePattern: "A", startNum: 1, endNum: 3 → A1, A2, A3
    *
+   * IMPORTANTE: compute() y paint() se ejecutan UNA SOLA VEZ al final,
+   * evitando conflictos de renderizado y asegurando que los puntos permanezcan visibles.
+   *
    * @param basePattern Patrón base del nombre (ej: "A", "P", "Punto")
    * @param startNum Número inicial del rango (inclusive)
    * @param endNum Número final del rango (inclusive)
-   * @returns Array de nombres creados o null si error
+   * @returns Objeto result con success, createdPoints y error opcional
    *
    * @example
-   * const points = bridge.createBoardPoints('A', 1, 100);
-   * // Crea A1, A2, ..., A100
+   * const result = bridge.createBoardPoints('A', 1, 100);
+   * if (result?.success) {
+   *   console.log('Creados:', result.createdPoints); // ['A1', 'A2', ..., 'A100']
+   * }
    */
   createBoardPoints(
     basePattern?: string,
     startNum?: number,
     endNum?: number,
-  ): string[] | null {
+  ): { success: boolean; createdPoints: string[]; error?: string } {
     try {
       // Parámetros por defecto si se llama sin argumentos desde toolbar
-      const pattern = basePattern || 'A';
+      const pattern = basePattern !== undefined ? basePattern : 'A';
       const start = startNum ?? 1;
       const end = endNum ?? 100;
 
       const bridge = this.getLegacyBridge();
       if (!bridge) {
         console.error('[Bridge] Legacy bridge not available');
-        return null;
+        return {
+          success: false,
+          createdPoints: [],
+          error: 'Canvas not ready',
+        };
       }
 
-      if (!pattern || start > end) {
+      if (!pattern || start > end || start < 0 || end < 0) {
         console.error('[Bridge] createBoardPoints: Invalid parameters');
-        return null;
+        return {
+          success: false,
+          createdPoints: [],
+          error: 'Invalid parameters',
+        };
       }
 
       const result = this.runLegacyScript(`
@@ -832,6 +891,7 @@ export class DgpadBridgeService {
           var Cn = canvas.getConstruction();
           var createdPoints = [];
 
+          // FASE 1: Crear TODOS los puntos primero
           for (var i = ${start}; i <= ${end}; i++) {
             var name = ${JSON.stringify(pattern)} + i;
             var x = 100 + i * 50;
@@ -841,6 +901,7 @@ export class DgpadBridgeService {
             createdPoints.push(name);
           }
 
+          // FASE 2: compute() y paint() UNA SOLA VEZ
           canvas.compute();
           canvas.paint();
 
@@ -848,10 +909,25 @@ export class DgpadBridgeService {
         })()
       `);
 
-      return Array.isArray(result) ? result : null;
+      if (Array.isArray(result)) {
+        return {
+          success: true,
+          createdPoints: result,
+        };
+      }
+
+      return {
+        success: false,
+        createdPoints: [],
+        error: 'Script execution failed',
+      };
     } catch (error) {
       console.error('[Bridge] createBoardPoints failed:', error);
-      return null;
+      return {
+        success: false,
+        createdPoints: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   }
 
