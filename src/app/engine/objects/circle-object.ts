@@ -1,4 +1,4 @@
-import { MathUtils } from '../../core/math-utils';
+import { MathUtils } from '../core/math-utils';
 import { IConstruction } from './base/construction-object';
 import { PointObject } from './point-object';
 import { PrimitiveCircleObject } from './primitive-circle-object';

@@ -1,4 +1,4 @@
-import { MathUtils } from '../../core/math-utils';
+import { MathUtils } from '../core/math-utils';
 import { ConstructionObject, IConstruction } from './base/construction-object';
 import { PointObject } from './point-object';
 

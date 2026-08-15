@@ -1,4 +1,4 @@
-import { MathUtils } from '../../core/math-utils';
+import { MathUtils } from '../core/math-utils';
 import { IConstruction } from './base/construction-object';
 import { MoveableObject } from './base/moveable-object';
 
