@@ -1,0 +1,78 @@
+<div *ngIf="state.isVisible" class="board-points-panel">
+  <div class="panel-header">
+    <h3>Tablero de Puntos</h3>
+    <button class="btn-close" (click)="close()" title="Cerrar panel">×</button>
+  </div>
+
+  <div class="panel-body">
+    <!-- Patrón base -->
+    <div class="form-group">
+      <label for="basePattern">Patrón base</label>
+      <input
+        id="basePattern"
+        [(ngModel)]="state.basePattern"
+        type="text"
+        placeholder="A, P, Punto, etc."
+        [disabled]="state.isCreating"
+        class="form-control"
+      />
+      <small class="help-text">Nombre de base para los puntos (ej: A → A1, A2, A3)</small>
+    </div>
+
+    <!-- Número inicial -->
+    <div class="form-group">
+      <label for="startNumber">Número inicial</label>
+      <input
+        id="startNumber"
+        [(ngModel)]="state.startNumber"
+        type="number"
+        min="0"
+        [disabled]="state.isCreating"
+        class="form-control"
+      />
+      <small class="help-text">Primer número de la secuencia</small>
+    </div>
+
+    <!-- Número final -->
+    <div class="form-group">
+      <label for="endNumber">Número final</label>
+      <input
+        id="endNumber"
+        [(ngModel)]="state.endNumber"
+        type="number"
+        [min]="state.startNumber + 1"
+        [disabled]="state.isCreating"
+        class="form-control"
+      />
+      <small class="help-text">Último número de la secuencia (inclusive)</small>
+    </div>
+
+    <!-- Info de cantidad -->
+    <div class="info-box" *ngIf="pointsCount > 0">
+      <small>Se crearán <strong>{{ pointsCount }}</strong> punto(s)</small>
+    </div>
+
+    <!-- Botón crear -->
+    <button
+      (click)="onCreatePoints()"
+      [disabled]="!isCreateButtonEnabled"
+      class="btn btn-primary btn-block"
+    >
+      <span *ngIf="!state.isCreating">Crear Puntos</span>
+      <span *ngIf="state.isCreating">Creando...</span>
+    </button>
+
+    <!-- Resultado exitoso -->
+    <div *ngIf="state.createdPoints.length > 0" class="result result-success">
+      <p class="result-icon">✅</p>
+      <p class="result-message">Puntos creados correctamente:</p>
+      <p class="result-list">{{ state.createdPoints.join(', ') }}</p>
+    </div>
+
+    <!-- Resultado error -->
+    <div *ngIf="state.error" class="result result-error">
+      <p class="result-icon">❌</p>
+      <p class="result-message">{{ state.error }}</p>
+    </div>
+  </div>
+</div>
