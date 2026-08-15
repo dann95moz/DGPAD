@@ -13,11 +13,13 @@ import { PropertiesPanelComponent } from '../properties/properties-panel/propert
 import { WidgetPanelComponent } from '../widgets/widget-panel/widget-panel.component';
 import { MacroPanelComponent } from '../macros/macro-panel/macro-panel.component';
 import { CalculatorPanelComponent } from '../calculator/calculator-panel/calculator-panel.component';
+import { BoardPointsPanelComponent } from '../board-points/board-points-panel/board-points-panel.component';
 
 type ParsedInstruction =
   | { kind: 'any_point'; name: string }
   | { kind: 'line'; name: string; a: string; b: string }
-  | { kind: 'segment'; name: string; a: string; b: string };
+  | { kind: 'segment'; name: string; a: string; b: string }
+  | { kind: 'midpoint'; name: string; a: string; b: string };
 
 @Component({
   selector: 'app-toolbar',
@@ -29,6 +31,7 @@ type ParsedInstruction =
     WidgetPanelComponent,
     MacroPanelComponent,
     CalculatorPanelComponent,
+    BoardPointsPanelComponent,
   ],
   templateUrl: './toolbar.component.html',
   styleUrl: './toolbar.component.css',
@@ -58,6 +61,9 @@ export class ToolbarComponent {
   @ViewChild(CalculatorPanelComponent)
   private calculatorPanel?: CalculatorPanelComponent;
 
+  @ViewChild(BoardPointsPanelComponent)
+  private boardPointsPanel?: BoardPointsPanelComponent;
+
   constructionEnabled = true;
   hideEnabled = false;
   deleteEnabled = false;
@@ -70,6 +76,7 @@ export class ToolbarComponent {
   nameEnabled = false;
   gridEnabled = false;
   otherToolsEnabled = false;
+  boardPointsEnabled = false;
 
   namesReplaceMode = false;
   currentSuggestedName = 'P';
@@ -172,8 +179,8 @@ export class ToolbarComponent {
 
     this.disableAllModes();
     this.closeFloatingPanels();
-    this.constructionEnabled = false;
     this.propertiesEnabled = next;
+    this.constructionEnabled = false;
 
     if (next) {
       this.dgpadBridge.setMode('properties');
@@ -181,12 +188,13 @@ export class ToolbarComponent {
       return;
     }
 
+    this.dgpadBridge.closeProperties();
     this.dgpadBridge.setMode('move');
   }
 
   closePropertiesState(): void {
     this.propertiesEnabled = false;
-    this.dgpadBridge.closeProperties();
+    this.dgpadBridge.setMode('move');
   }
 
   openHistory(): void {
@@ -227,7 +235,6 @@ export class ToolbarComponent {
 
     if (next) {
       const usedNames = this.dgpadBridge.getUsedNames();
-      console.log('Opening Angular names panel. usedNames =', usedNames);
       this.namesPanel?.open(usedNames, this.namesReplaceMode);
       return;
     }
@@ -245,7 +252,6 @@ export class ToolbarComponent {
 
   handleNameSelected(name: string): void {
     this.currentSuggestedName = name;
-    console.log('Nombre actual sugerido:', name, 'replaceMode:', this.namesReplaceMode);
   }
 
   toggleGrid(): void {
@@ -313,7 +319,7 @@ export class ToolbarComponent {
         this.dgpadBridge.createExpressionSegments();
         break;
       case 'board_points':
-        this.dgpadBridge.createBoardPoints();
+        this.boardPointsPanel?.open();
         break;
       case 'integer_cursor':
         this.dgpadBridge.createIntegerCursor();
@@ -327,6 +333,10 @@ export class ToolbarComponent {
     }
 
     this.closeOtherToolsState();
+  }
+
+  closeBoardPointsState(): void {
+    this.boardPointsEnabled = false;
   }
 
   handleTextualConstructionBuildRequested(text: string): void {
@@ -416,6 +426,21 @@ export class ToolbarComponent {
         continue;
       }
 
+      const midpointMatch =
+        /^punto\s+medio\s+de\s+([A-Za-zÁÉÍÓÚáéíóúÑñ])\s+y\s+([A-Za-zÁÉÍÓÚáéíóúÑñ])$/i.exec(predicate);
+
+      if (midpointMatch) {
+        const [, a, b] = midpointMatch;
+
+        if (!knownNames.has(a) || !knownNames.has(b)) {
+          throw new Error(`Línea ${lineNumber}: el punto medio requiere puntos ya definidos`);
+        }
+
+        instructions.push({ kind: 'midpoint', name, a, b });
+        knownNames.add(name);
+        continue;
+      }
+
       throw new Error(`Línea ${lineNumber}: no entiendo "${line}"`);
     }
 
@@ -433,6 +458,9 @@ export class ToolbarComponent {
       case 'segment':
         this.dgpadBridge.createSegment(instruction.name, instruction.a, instruction.b);
         return;
+      case 'midpoint':
+        this.dgpadBridge.createMidPoint(instruction.name, instruction.a, instruction.b);
+        return;
     }
   }
 
@@ -447,6 +475,7 @@ export class ToolbarComponent {
     this.exportEnabled = false;
     this.nameEnabled = false;
     this.otherToolsEnabled = false;
+    this.boardPointsEnabled = false;
   }
 
   private closeFloatingPanels(): void {
@@ -458,5 +487,6 @@ export class ToolbarComponent {
     this.widgetPanel?.close();
     this.macroPanel?.close();
     this.calculatorPanel?.close();
+    this.boardPointsPanel?.close();
   }
 }
