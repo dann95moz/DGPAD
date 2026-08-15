@@ -12,3 +12,6 @@ export * from './area-object';
 export * from './angle-object';
 export * from './expression-object';
 export * from './list-object';
+export * from './intersection-object';
+export * from './transformations';
+

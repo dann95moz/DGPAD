@@ -228,6 +228,35 @@ export class MathUtils {
   }
 
   /**
+   * Verifica si el cursor está cerca de una semirrecta que nace en A pasando por B
+   */
+  static isNearToRay(
+    xA: number,
+    yA: number,
+    xB: number,
+    yB: number,
+    xM: number,
+    yM: number,
+    d: number,
+  ): boolean {
+    if (isNaN(xA + yA + xB + yB)) return false;
+    const a = xM * (yB - yA) + xB * (yA - yM) + xA * (yM - yB);
+    const xab = xB - xA;
+    const yab = yB - yA;
+    const dab = xab * xab + yab * yab;
+    if (dab < 1e-13) return false;
+    const mh2 = (a * a) / dab;
+    if (mh2 > d * d) return false;
+    const mamb = (xA - xM) * (xB - xM) + (yA - yM) * (yB - yM);
+    if (mamb > mh2) {
+      const ma2 = (xA - xM) * (xA - xM) + (yA - yM) * (yA - yM);
+      const mb2 = (xB - xM) * (xB - xM) + (yB - yM) * (yB - yM);
+      if (ma2 < mb2) return false;
+    }
+    return true;
+  }
+
+  /**
    * Verifica si el cursor está cerca de una recta infinita
    */
   static isNearToLine(
@@ -270,5 +299,117 @@ export class MathUtils {
     if (d2 === 0) return [xA, yA];
     const u = ((x - xA) * dx + (y - yA) * dy) / d2;
     return [xA + u * dx, yA + u * dy];
+  }
+
+  /**
+   * Intersección exacta entre dos rectas infinitas
+   */
+  static intersectLines(
+    x1: number,
+    y1: number,
+    dx1: number,
+    dy1: number,
+    x2: number,
+    y2: number,
+    dx2: number,
+    dy2: number,
+  ): Point2D | null {
+    const det = dx1 * dy2 - dy1 * dx2;
+    if (Math.abs(det) < 1e-12) return null; // Paralelas o coincidentes
+
+    const t = ((x2 - x1) * dy2 - (y2 - y1) * dx2) / det;
+    return {
+      x: x1 + t * dx1,
+      y: y1 + t * dy1,
+    };
+  }
+
+  /**
+   * Intersección entre una recta y una circunferencia
+   */
+  static intersectLineCircle(
+    xL: number,
+    yL: number,
+    ndx: number,
+    ndy: number,
+    xC: number,
+    yC: number,
+    r: number,
+  ): [Point2D, Point2D] | null {
+    const d = (xC - xL) * ndy - (yC - yL) * ndx;
+    const h2 = r * r - d * d;
+    if (h2 < 0) return null; // No hay intersección
+
+    const projX = xC - d * ndy;
+    const projY = yC + d * ndx;
+    const h = Math.sqrt(Math.max(0, h2));
+
+    return [
+      { x: projX - h * ndx, y: projY - h * ndy },
+      { x: projX + h * ndx, y: projY + h * ndy },
+    ];
+  }
+
+  /**
+   * Intersección entre dos circunferencias
+   */
+  static intersectCircles(
+    xC1: number,
+    yC1: number,
+    r1: number,
+    xC2: number,
+    yC2: number,
+    r2: number,
+  ): [Point2D, Point2D] | null {
+    const dx = xC2 - xC1;
+    const dy = yC2 - yC1;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > r1 + r2 || dist < Math.abs(r1 - r2) || dist === 0) {
+      return null;
+    }
+
+    const l = (dist * dist + r1 * r1 - r2 * r2) / (2 * dist);
+    const h2 = r1 * r1 - l * l;
+    if (h2 < 0) return null;
+
+    const ndx = dx / dist;
+    const ndy = dy / dist;
+    const midX = xC1 + l * ndx;
+    const midY = yC1 + l * ndy;
+    const h = Math.sqrt(Math.max(0, h2));
+
+    return [
+      { x: midX - h * ndy, y: midY + h * ndx },
+      { x: midX + h * ndy, y: midY - h * ndx },
+    ];
+  }
+
+  /**
+   * Limpia acentos y caracteres especiales de nombres de objetos
+   */
+  static leaveAccents(str: string): string {
+    if (!str) return '';
+    return str.replace(/[^\w\d_]/g, '');
+  }
+
+  /**
+   * Verifica si una estructura representa un punto [x, y]
+   */
+  static isPoint(val: unknown): val is [number, number] {
+    return Array.isArray(val) && (val.length === 2 || val.length === 3) && !isNaN(val[0]) && !isNaN(val[1]);
+  }
+
+  /**
+   * Extrae las variables matemáticas utilizadas en una expresión (ej: 'x', 'y', 't')
+   */
+  static getVars(expr: string): string[] {
+    const vars: string[] = [];
+    for (const v of ['x', 'y', 'z', 't']) {
+      if (new RegExp(`(\\W|^)${v}([^\\(]|$)`).test(expr)) {
+        vars.push(v);
+      }
+    }
+    return vars;
   }
 }
