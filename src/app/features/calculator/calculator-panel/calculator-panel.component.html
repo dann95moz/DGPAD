@@ -11,6 +11,12 @@
         (input)="update('max', $any($event.target).value)" /></label>
     </div>
 
+    <div class="conversions">
+      <button type="button" class="btn-convert" (click)="convertToPoint()" title="Convertir a Punto">→ Punto</button>
+      <button type="button" class="btn-convert" (click)="convertToList()" title="Convertir a Lista">→ Lista</button>
+      <button type="button" class="btn-convert" (click)="convertToFunction()" title="Convertir a Función">→ Función</button>
+    </div>
+
     <div class="actions">
       <button type="button" class="valid" (click)="validate()" title="Validar">✓</button>
       <button type="button" class="cancel" (click)="cancel()" title="Cancelar">×</button>

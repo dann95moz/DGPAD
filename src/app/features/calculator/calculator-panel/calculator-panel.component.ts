@@ -92,6 +92,34 @@ export class CalculatorPanelComponent {
     this.refresh();
   }
 
+  convertToPoint(): string | null {
+    const expr = this.getActiveExpression();
+    if (!expr) return null;
+    const res = this.dgpadBridge.convertExpressionToPoint(expr);
+    this.refresh();
+    return res;
+  }
+
+  convertToList(): string | null {
+    const expr = this.getActiveExpression();
+    if (!expr) return null;
+    const res = this.dgpadBridge.convertExpressionToList(expr);
+    this.refresh();
+    return res;
+  }
+
+  convertToFunction(): string | null {
+    const expr = this.getActiveExpression();
+    if (!expr) return null;
+    const res = this.dgpadBridge.convertExpressionToFunction(expr);
+    this.refresh();
+    return res;
+  }
+
+  getActiveExpression(): string {
+    return (this.state?.[this.activeField] ?? this.state?.e1 ?? '').trim();
+  }
+
   @HostListener('window:message', ['$event'])
   handleLegacyMessage(event: MessageEvent): void {
     if (
