@@ -1,0 +1,4 @@
+Bug dans Chrome : dans chrome, créer un block comme "repeter 10 fois", fermer l'éditeur et le réouvrir provoque la disparition du "10". Pour éviter ceci, dans blockly_compressed.js il faut mettre à la terre la fonction "updateInverseScreenCTM" comme ceci :
+
+
+Blockly.WorkspaceSvg.prototype.updateInverseScreenCTM=function(){/*this.inverseScreenCTM_=this.getParentSvg().getScreenCTM().inverse()*/};

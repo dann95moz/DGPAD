@@ -69,6 +69,58 @@ export interface EnginePreferences {
   };
   font: string;
   fontmargin: number;
+  precision: {
+    timeout: number;
+    edit_timeout: number;
+    caress: number;
+    point: number;
+    segment: number;
+    vector: number;
+    area: number;
+    angle: number;
+    fixedangle: number;
+    expression: number;
+    circle: number;
+  };
+  magnifyfactor: {
+    point: number;
+    line: number;
+    expression_cursor: number;
+    expression: number;
+    list: number;
+  };
+  selectedfactor: {
+    point: number;
+    line: number;
+    expression_cursor: number;
+    expression: number;
+    list: number;
+  };
+  tool: {
+    size: number;
+    touchfactor: number;
+    gap: number;
+    marginV: number;
+  };
+  controlpanel: {
+    size: number;
+    color: string;
+  };
+  localstorage: {
+    base: string;
+    max: number;
+    iconwidth: number;
+    iconmargin: number;
+  };
+  MobileScale: number;
+  MacroPanelWidth: number;
+  CalcPanelHeight: number;
+  MagnifierBounds: {
+    l: number;
+    t: number;
+    w: number;
+    captureWidth: number;
+  };
 }
 
 export const DEFAULT_ENGINE_PREFERENCES: EnginePreferences = {
@@ -138,4 +190,56 @@ export const DEFAULT_ENGINE_PREFERENCES: EnginePreferences = {
   },
   font: 'Verdana',
   fontmargin: 5,
+  precision: {
+    timeout: 2000,
+    edit_timeout: 5000,
+    caress: 5,
+    point: -1,
+    segment: -1,
+    vector: -1,
+    area: -1,
+    angle: 1,
+    fixedangle: 1,
+    expression: 2,
+    circle: -1,
+  },
+  magnifyfactor: {
+    point: 2,
+    line: 2,
+    expression_cursor: 1,
+    expression: 1,
+    list: 1,
+  },
+  selectedfactor: {
+    point: 2,
+    line: 2,
+    expression_cursor: 1,
+    expression: 1,
+    list: 1,
+  },
+  tool: {
+    size: 50,
+    touchfactor: 1.2,
+    gap: 5,
+    marginV: 30,
+  },
+  controlpanel: {
+    size: 42,
+    color: 'hsl(0,0%,90%)',
+  },
+  localstorage: {
+    base: 'DGPad_',
+    max: 20,
+    iconwidth: 300,
+    iconmargin: 20,
+  },
+  MobileScale: 0.7,
+  MacroPanelWidth: 200,
+  CalcPanelHeight: 72,
+  MagnifierBounds: {
+    l: 10,
+    t: 10,
+    w: 75,
+    captureWidth: 75,
+  },
 };
