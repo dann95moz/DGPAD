@@ -15,6 +15,7 @@ export * from './interaction';
 export * from './macros';
 export * from './canvas';
 export * from './blockly';
+export * from './i18n';
 
 
 

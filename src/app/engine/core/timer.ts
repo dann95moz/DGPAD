@@ -1,8 +1,15 @@
+export interface IEngineTimer {
+  start(): void;
+  clear(): void;
+  isRunnable(): boolean;
+  setDelay(delay: number): void;
+}
+
 /**
  * Temporizador individual con soporte para cancelación y retardo dinámico.
  * Migrado desde $U.timer en Utils.js
  */
-export class EngineTimer<T = unknown> {
+export class EngineTimer<T = any> implements IEngineTimer {
   private delay: number;
   private proc: (param?: T) => void;
   private param?: T;
@@ -49,7 +56,7 @@ export class EngineTimer<T = unknown> {
 export class EngineTimers {
   private defaultDelay: number;
   private currentDelay = 0;
-  private timers: EngineTimer[] = [];
+  private timers: IEngineTimer[] = [];
 
   constructor(delay = 100) {
     this.defaultDelay = delay;
@@ -57,7 +64,7 @@ export class EngineTimers {
 
   push<T>(proc: (param?: T) => void, param?: T): void {
     this.currentDelay += this.defaultDelay;
-    this.timers.push(new EngineTimer(proc, this.currentDelay, param));
+    this.timers.push(new EngineTimer<T>(proc, this.currentDelay, param));
   }
 
   start(): void {
